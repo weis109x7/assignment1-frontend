@@ -13,7 +13,7 @@ export default {
     mode: "development",
     devtool: "source-map",
     devServer: {
-        port: 3000,
+        port: 3001,
         static: {
             directory: join(__dirname, "app"),
         },
