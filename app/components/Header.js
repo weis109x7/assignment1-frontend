@@ -1,23 +1,26 @@
 import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import HeaderLoggedOut from "./HeaderLoggedOut.js";
 import HeaderLoggedIn from "./HeaderLoggedIn.js";
 import StateContext from "../StateContext.js";
+
+import { AppBar, Toolbar, Box } from "@mui/material";
+
+const pages = ["Products", "Pricing", "Blog"];
 
 function Header(props) {
     const appState = useContext(StateContext);
 
     return (
-        <header className="header-bar bg-primary mb-3">
-            <div className="container d-flex flex-column flex-md-row align-items-center p-3">
-                <h4 className="my-0 mr-md-auto font-weight-normal">
-                    <Link to="/" className="text-white">
-                        ComplexApp
+        <AppBar position="static" sx={{ background: "#33D4FF" }}>
+            <Toolbar sx={{ justifyContent: "space-between" }}>
+                <h1>
+                    <Link to="/" style={{ textDecoration: "none" }}>
+                        <Box sx={{ color: "text.primary", "&:hover": { color: "text.secondary" } }}>TMS</Box>
                     </Link>
-                </h4>
-                {appState.loggedIn ? <HeaderLoggedIn /> : <HeaderLoggedOut />}
-            </div>
-        </header>
+                </h1>
+                {appState.loggedIn ? <HeaderLoggedIn /> : <></>}
+            </Toolbar>
+        </AppBar>
     );
 }
 

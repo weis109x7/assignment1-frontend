@@ -12,7 +12,6 @@ import DispatchContext from "./DispatchContext.js";
 
 // My Components
 import Header from "./components/Header.js";
-import FlashMessages from "./components/FlashMessages.js";
 
 import Home from "./components/Home.js";
 import Login from "./components/login.js";
@@ -31,7 +30,7 @@ function Main() {
         switch (action.type) {
             case "login":
                 draft.loggedIn = true;
-                draft.user = action.data;
+                draft.user = action.data.user;
                 Axios.defaults.headers.common["Authorization"] = "Bearer " + action.data.user.token;
                 Cookies.set("token", action.data.user.token, { expires: 7 });
                 return;
@@ -93,7 +92,6 @@ function Main() {
             <StateContext.Provider value={state}>
                 <DispatchContext.Provider value={dispatch}>
                     <BrowserRouter>
-                        <FlashMessages messages={state.flashMessages} />
                         <Header />
                         <Routes>
                             <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
