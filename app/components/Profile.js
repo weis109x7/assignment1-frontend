@@ -7,19 +7,26 @@ import { Link } from "react-router-dom";
 
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
-function Login() {
+function Profile() {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
-    const [userId, setUserId] = useImmer();
+    const [state, setState] = useImmer({
+        isLoading: true,
+        feed: [],
+    });
+
+    const [email, setEmail] = useImmer();
     const [password, setPassword] = useImmer();
 
     const [loginError, setLoginError] = useImmer(false);
 
+    const regex = new RegExp(/^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,10}$/);
+
     async function handleSubmit(e) {
         e.preventDefault();
         try {
-            const response = await Axios.post("/login", { userId, password }).catch((error) => {
+            const response = await Axios.post("/user/update", { email, password }).catch((error) => {
                 // return backend error
                 if (error.response) {
                     console.log("backend error");
@@ -32,10 +39,10 @@ function Login() {
             console.log("response following:");
             console.log(response);
             if (response.data) {
-                appDispatch({ type: "login", data: response.data });
-                appDispatch({ type: "flashMessage", value: "You have successfully logged in." });
+                // appDispatch({ type: "login", data: response.data });
+                appDispatch({ type: "flashMessage", value: "update profile success." });
             } else {
-                console.log("Incorrect username / password.");
+                appDispatch({ type: "flashMessage", value: "error updating profile." });
                 setLoginError(true);
                 setTimeout(() => {
                     setLoginError(false);
@@ -47,6 +54,14 @@ function Login() {
         }
     }
 
+    useEffect(() => {
+        if (password) {
+            setLoginError(!regex.test(password));
+        } else {
+            setLoginError(false);
+        }
+    }, [password]);
+
     return (
         <>
             <Container>
@@ -54,20 +69,20 @@ function Login() {
                     <Grid item>
                         <Grid container justifyContent="center">
                             <h2>
-                                <strong> Welcome to TMS </strong>
+                                <strong>Welcome to profile edit page</strong>
                             </h2>
                         </Grid>
 
                         <Paper elevation={20} style={{ padding: "20px" }}>
                             <form onSubmit={handleSubmit}>
                                 <div>
-                                    <TextField error={loginError} onChange={(e) => setUserId(e.target.value)} type="text" label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" sx={{ mb: 2 }} fullWidth />
+                                    <TextField onChange={(e) => setEmail(e.target.value)} type="text" label="E-mail" variant="outlined" autoComplete="off" placeholder="Enter Username" sx={{ mb: 2 }} fullWidth />
                                 </div>
                                 <div>
-                                    <TextField error={loginError} helperText={loginError ? "Invalid Credentials" : " "} onChange={(e) => setPassword(e.target.value)} type="password" label="Password" variant="outlined" required autoComplete="off" placeholder="Enter Password" sx={{ mb: 1 }} fullWidth />
+                                    <TextField error={loginError} helperText={loginError ? "password needs to be 8-10char and contains alphanumeric and specialcharacter" : " "} onChange={(e) => setPassword(e.target.value)} type="password" label="New Password" variant="outlined" autoComplete="off" placeholder="Enter Password" sx={{ mb: 1 }} fullWidth />
                                 </div>
                                 <Button variant="outlined" type="submit" color={loginError ? "error" : "primary"} fullWidth>
-                                    Login
+                                    Save
                                 </Button>
                             </form>
                         </Paper>
@@ -78,4 +93,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default Profile;

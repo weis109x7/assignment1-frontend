@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 import { useImmerReducer } from "use-immer";
 import Cookies from "js-cookie";
@@ -16,15 +16,18 @@ import Header from "./components/Header.js";
 import Home from "./components/Home.js";
 import Login from "./components/login.js";
 import NotFound from "./components/NotFound.js";
+import Usermanagement from "./components/Usermanagement.js";
+import Profile from "./components/Profile.js";
 
 function Main() {
     const initialState = {
         loggedIn: false,
-        flashMessages: [],
         user: {
             token: Cookies.get("token"),
         },
     };
+
+    const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
     function ourReducer(draft, action) {
         switch (action.type) {
@@ -41,22 +44,20 @@ function Main() {
                 Cookies.remove("token");
                 return;
             case "flashMessage":
-                draft.flashMessages.push(action.value);
+                console.log(action.value);
                 return;
         }
     }
 
-    const [state, dispatch] = useImmerReducer(ourReducer, initialState);
-
+    const controller = new AbortController();
     // Check if token has expired or not on first render
     useEffect(() => {
         const token = Cookies.get("token");
         if (token) {
             Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-            const ourRequest = Axios.CancelToken.source();
             async function fetchResults() {
                 try {
-                    const response = await Axios.post("/checktoken", {}).catch((error) => {
+                    const response = await Axios.post("/checktoken", { signal: controller.signal }).catch((error) => {
                         // return backend error
                         if (error.response) {
                             console.log("backend error");
@@ -66,7 +67,7 @@ function Main() {
                             throw error;
                         }
                     });
-                    console.log("response following:");
+                    console.log("check token response following:");
                     console.log(response);
                     if (response.data) {
                         //login
@@ -83,7 +84,7 @@ function Main() {
                 }
             }
             fetchResults();
-            return () => ourRequest.cancel();
+            return () => controller.abort();
         }
     }, []);
 
@@ -95,6 +96,8 @@ function Main() {
                         <Header />
                         <Routes>
                             <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
+                            <Route path="usermanagement" element={<Usermanagement />} />
+                            <Route path="myprofile" element={<Profile />} />
                             <Route path="*" element={<NotFound />} />
                         </Routes>
                     </BrowserRouter>

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import HeaderLoggedIn from "./HeaderLoggedIn.js";
 import StateContext from "../StateContext.js";
@@ -11,7 +11,7 @@ function Header(props) {
     const appState = useContext(StateContext);
 
     return (
-        <AppBar position="static" sx={{ background: "#33D4FF" }}>
+        <AppBar position="static" sx={{ background: "#49A3BA" }}>
             <Toolbar sx={{ justifyContent: "space-between" }}>
                 <h1>
                     <Link to="/" style={{ textDecoration: "none" }}>
