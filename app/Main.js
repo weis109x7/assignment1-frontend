@@ -1,18 +1,19 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { useImmerReducer } from "use-immer";
 import Cookies from "js-cookie";
 import Axios from "axios";
 Axios.defaults.baseURL = "http://localhost:3000/api/v1";
 
+import { ToastContainer, toast } from "react-toastify";
+
 import StateContext from "./StateContext.js";
 import DispatchContext from "./DispatchContext.js";
 
 // My Components
 import Header from "./components/Header.js";
-
 import Home from "./components/Home.js";
 import Login from "./components/login.js";
 import NotFound from "./components/NotFound.js";
@@ -25,9 +26,20 @@ function Main() {
         user: {
             token: Cookies.get("token"),
         },
+        groupNames: [],
     };
 
-    const [state, dispatch] = useImmerReducer(ourReducer, initialState);
+    const showToastMessage = (success, message) => {
+        if (success) {
+            toast.success(message, {
+                position: toast.POSITION.TOP_LEFT,
+            });
+        } else {
+            toast.error(message, {
+                position: toast.POSITION.TOP_LEFT,
+            });
+        }
+    };
 
     function ourReducer(draft, action) {
         switch (action.type) {
@@ -44,10 +56,17 @@ function Main() {
                 Cookies.remove("token");
                 return;
             case "flashMessage":
-                console.log(action.value);
+                showToastMessage(action.success, action.message);
+                return;
+            case "setGroupNames":
+                draft.groupNames = action.data;
+                return;
+            case "updateEmail":
+                draft.user.email = action.data;
                 return;
         }
     }
+    const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
     const controller = new AbortController();
     // Check if token has expired or not on first render
@@ -72,11 +91,11 @@ function Main() {
                     if (response.data) {
                         //login
                         dispatch({ type: "login", data: response.data });
-                        dispatch({ type: "flashMessage", value: "Your session has resumed." });
+                        dispatch({ type: "flashMessage", success: true, message: "Your session has resumed." });
                     } else {
                         //logout
                         dispatch({ type: "logout" });
-                        dispatch({ type: "flashMessage", value: "Your session has expired. Please log in again." });
+                        dispatch({ type: "flashMessage", success: false, message: "Your session has expired. Please log in again." });
                     }
                 } catch (e) {
                     console.log("front end error:");
@@ -103,6 +122,7 @@ function Main() {
                     </BrowserRouter>
                 </DispatchContext.Provider>
             </StateContext.Provider>
+            <ToastContainer />
         </>
     );
 }

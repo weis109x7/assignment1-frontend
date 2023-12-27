@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import DispatchContext from "../DispatchContext.js";
 import StateContext from "../StateContext.js";
@@ -6,14 +6,14 @@ import StateContext from "../StateContext.js";
 import { Button } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-function HeaderLoggedIn(props) {
+export default function HeaderLoggedIn(props) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
     let location = useLocation();
 
     function handleLogout() {
         appDispatch({ type: "logout" });
-        appDispatch({ type: "flashMessage", value: "You have successfully logged out." });
+        appDispatch({ type: "flashMessage", success: true, message: "You have successfully logged out." });
     }
 
     // Create a custom theme with overrides for disabled button styles
@@ -53,5 +53,3 @@ function HeaderLoggedIn(props) {
         </div>
     );
 }
-
-export default HeaderLoggedIn;

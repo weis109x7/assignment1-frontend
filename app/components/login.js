@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
-function Login() {
+export default function Login() {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -33,9 +33,9 @@ function Login() {
             console.log(response);
             if (response.data) {
                 appDispatch({ type: "login", data: response.data });
-                appDispatch({ type: "flashMessage", value: "You have successfully logged in." });
+                appDispatch({ type: "flashMessage", success: true, message: "You have successfully logged in." });
             } else {
-                console.log("Incorrect username / password.");
+                appDispatch({ type: "flashMessage", success: false, message: "Invalid credentials." });
                 setLoginError(true);
                 setTimeout(() => {
                     setLoginError(false);
@@ -77,5 +77,3 @@ function Login() {
         </>
     );
 }
-
-export default Login;

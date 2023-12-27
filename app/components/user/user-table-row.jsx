@@ -16,7 +16,7 @@ import InputLabel from "@mui/material/InputLabel";
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 import { Autocomplete } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
+import { Check } from "@mui/icons-material";
 
 // ----------------------------------------------------------------------
 
@@ -30,8 +30,6 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     const [newUserGroup, setNewUserGroup] = useImmer(userGroup);
     const [isActive, setIsActive] = useImmer(status);
     const [newPass, setNewPass] = useImmer("");
-
-    const [groupNames, setGroupNames] = useImmer([]);
 
     const handleEdit = (event) => {
         setEditable((editable) => !editable);
@@ -69,10 +67,10 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
             console.log("response for user edit:");
             console.log(response);
             if (response.data) {
-                appDispatch({ type: "flashMessage", value: "You have successfully edit user." });
+                appDispatch({ type: "flashMessage", success: true, message: "You have successfully edit user." });
                 setEditable(false);
             } else {
-                appDispatch({ type: "flashMessage", value: "edit user failed." });
+                appDispatch({ type: "flashMessage", success: false, message: "edit user failed." });
             }
         } catch (e) {
             console.log("front end error:");
@@ -104,7 +102,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                 console.log(response);
                 if (response.data) {
                     let nameArr = response.data.message.map((a) => a.userGroup);
-                    setGroupNames(nameArr);
+                    appDispatch({ type: "setGroupNames", data: nameArr });
                 } else {
                     console.log("fail getting users");
                 }
@@ -137,14 +135,14 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                             onChange={(e, newvalue) => handleMulti(newvalue)}
                             multiple
                             id="tags-standard"
-                            options={groupNames}
+                            options={appState.groupNames}
                             getOptionLabel={(option) => option}
                             defaultValue={userGroup}
                             disableCloseOnSelect
                             renderOption={(props, option, { selected }) => (
                                 <MenuItem key={option} value={option} sx={{ justifyContent: "space-between" }} {...props}>
                                     {option}
-                                    {selected ? <CheckIcon color="info" /> : null}
+                                    {selected ? <Check color="info" /> : null}
                                 </MenuItem>
                             )}
                             renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" />}

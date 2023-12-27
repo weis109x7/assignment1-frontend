@@ -1,13 +1,12 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+
 import HeaderLoggedIn from "./HeaderLoggedIn.js";
 import StateContext from "../StateContext.js";
 
 import { AppBar, Toolbar, Box } from "@mui/material";
 
-const pages = ["Products", "Pricing", "Blog"];
-
-function Header(props) {
+export default function Header(props) {
     const appState = useContext(StateContext);
 
     return (
@@ -23,5 +22,3 @@ function Header(props) {
         </AppBar>
     );
 }
-
-export default Header;

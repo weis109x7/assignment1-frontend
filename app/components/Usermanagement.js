@@ -19,6 +19,13 @@ import TableEmptyRows from "./user/table-empty-rows.jsx";
 import UserTableToolbar from "./user/user-table-toolbar.jsx";
 import { emptyRows, applyFilter, getComparator } from "./user/utils";
 import { useImmer } from "use-immer";
+import { Autocomplete } from "@mui/material";
+
+import { Grid, Paper, TextField } from "@mui/material";
+
+import MenuItem from "@mui/material/MenuItem";
+
+import { Check, Add } from "@mui/icons-material";
 
 // ----------------------------------------------------------------------
 
@@ -37,6 +44,15 @@ export default function Usermanagement() {
     const [rowsPerPage, setRowsPerPage] = useImmer(5);
 
     const [allUsers, setAlUsers] = useImmer([]);
+
+    const [newGroupName, setNewGroupName] = useImmer("");
+
+    const [newUsrObj, setNewUsrObj] = useImmer({
+        username: "",
+        password: "",
+        email: "",
+        userGroup: [],
+    });
 
     const handleSort = (event, id) => {
         const isAsc = orderBy === id && order === "asc";
@@ -66,46 +82,184 @@ export default function Usermanagement() {
         filterName,
     });
 
+    const handleMulti = (event) => {
+        setNewUsrObj((prevFormData) => ({
+            ...prevFormData,
+            userGroup: event,
+        }));
+    };
+    const handleNewUsrInput = (e) => {
+        const { name, value } = e.target;
+        setNewUsrObj((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
+        console.log(newUsrObj);
+    };
+
+    async function handleSubmitNewGroup(e) {
+        e.preventDefault();
+        try {
+            const response = await Axios.post("/group/new", { groupName: newGroupName }).catch((error) => {
+                // return backend error
+                if (error.response) {
+                    console.log("backend error");
+                    return error.response.data;
+                } else {
+                    console.log("axios error");
+                    throw error;
+                }
+            });
+            console.log("response group/new:");
+            console.log(response);
+            if (response.data) {
+                appDispatch({ type: "flashMessage", success: true, message: "You have successfully created new group." });
+                setNewGroupName("");
+                fetchResults();
+                fetchGroupNames();
+            } else {
+                appDispatch({ type: "flashMessage", success: false, message: "group not created error." });
+            }
+        } catch (e) {
+            console.log("front end error:");
+            console.log(e);
+        }
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        try {
+            const response = await Axios.post("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") }).catch((error) => {
+                // return backend error
+                if (error.response) {
+                    console.log("backend error");
+                    return error.response.data;
+                } else {
+                    console.log("axios error");
+                    throw error;
+                }
+            });
+            console.log("response user/new:");
+            console.log(response);
+            if (response.data) {
+                appDispatch({ type: "flashMessage", success: true, message: "You have successfully created new user." });
+                setNewUsrObj({ username: "", password: "", email: "", userGroup: [] });
+                fetchResults();
+                fetchGroupNames();
+            } else {
+                appDispatch({ type: "flashMessage", success: false, message: "user not created error." });
+            }
+        } catch (e) {
+            console.log("front end error:");
+            console.log(e);
+        }
+    }
+
     const notFound = !dataFiltered.length && !!filterName;
 
     const controller = new AbortController();
-    useEffect(() => {
-        async function fetchResults() {
-            try {
-                const response = await Axios.post("/user/getusers", { signal: controller.signal }).catch((error) => {
-                    // return backend error
-                    if (error.response) {
-                        console.log("backend error");
-                        return error.response.data;
-                    } else {
-                        console.log("axios error");
-                        throw error;
-                    }
-                });
-                console.log("response following:");
-                console.log(response);
-                if (response.data) {
-                    setAlUsers(response.data.message);
+    async function fetchGroupNames() {
+        try {
+            const response = await Axios.post("/group/getGroups", { signal: controller.signal }).catch((error) => {
+                // return backend error
+                if (error.response) {
+                    console.log("backend error");
+                    return error.response.data;
                 } else {
-                    console.log("fail getting users");
+                    console.log("axios error");
+                    throw error;
                 }
-            } catch (e) {
-                console.log("front end error:");
-                console.log(e);
+            });
+            console.log("response for get groupnames:");
+            console.log(response);
+            if (response.data) {
+                let nameArr = response.data.message.map((a) => a.userGroup);
+                appDispatch({ type: "setGroupNames", data: nameArr });
+            } else {
+                console.log("fail getting users");
             }
+        } catch (e) {
+            console.log("front end error:");
+            console.log(e);
         }
-        if (appState.loggedIn) fetchResults();
+    }
+    async function fetchResults() {
+        try {
+            const response = await Axios.post("/user/getusers", { signal: controller.signal }).catch((error) => {
+                // return backend error
+                if (error.response) {
+                    console.log("backend error");
+                    return error.response.data;
+                } else {
+                    console.log("axios error");
+                    throw error;
+                }
+            });
+            console.log("response following:");
+            console.log(response);
+            if (response.data) {
+                setAlUsers(response.data.message);
+            } else {
+                console.log("fail getting users");
+            }
+        } catch (e) {
+            console.log("front end error:");
+            console.log(e);
+        }
+    }
+    useEffect(() => {
+        if (appState.loggedIn) {
+            fetchResults();
+            fetchGroupNames();
+        }
         return () => controller.abort();
     }, [appState.loggedIn]);
 
     return (
         <Container sx={{ mt: 3 }}>
             <Card>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
-                    <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
-                    <Button variant="contained" color="inherit">
-                        New User
-                    </Button>
+                <Stack direction="column" alignItems="flex-end" mt={3}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5} mr={3}>
+                        <TextField name="newGroupName" type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} label="New Group Name" variant="outlined" autoComplete="off" placeholder="Enter New Group Name" size="small" />
+                        <Button variant="contained" type="submit" color="inherit" onClick={handleSubmitNewGroup}>
+                            <Add />
+                        </Button>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
+                        <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
+
+                        <form onSubmit={handleSubmit}>
+                            <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="flex-end">
+                                <TextField name="username" type="text" value={newUsrObj.username} onChange={(e) => handleNewUsrInput(e)} label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" size="small" />
+
+                                <TextField name="password" type="password" value={newUsrObj.password} onChange={(e) => handleNewUsrInput(e)} label="Password" variant="outlined" required autoComplete="off" placeholder="Enter Password" size="small" />
+
+                                <TextField name="email" type="text" value={newUsrObj.email} onChange={(e) => handleNewUsrInput(e)} label="Email" variant="outlined" autoComplete="off" placeholder="Enter Email" size="small" />
+
+                                <Autocomplete
+                                    sx={{}}
+                                    onChange={(e, newvalue) => handleMulti(newvalue)}
+                                    value={newUsrObj.userGroup}
+                                    multiple
+                                    id="tags-standard"
+                                    options={appState.groupNames}
+                                    getOptionLabel={(option) => option}
+                                    disableCloseOnSelect
+                                    renderOption={(props, option, { selected }) => (
+                                        <MenuItem key={option} value={option} sx={{ justifyContent: "space-between" }} {...props}>
+                                            {option}
+                                            {selected ? <Check color="info" /> : null}
+                                        </MenuItem>
+                                    )}
+                                    renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" size="small" sx={{ width: "300px" }} />}
+                                />
+
+                                <Button variant="contained" type="submit" color="inherit">
+                                    <Add />
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Stack>
                 </Stack>
 
                 <TableContainer sx={{ overflow: "unset" }}>

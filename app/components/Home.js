@@ -4,7 +4,7 @@ import { useImmer } from "use-immer";
 import Axios from "axios";
 import { Link, Outlet } from "react-router-dom";
 
-function Home() {
+export default function Home() {
     const appState = useContext(StateContext);
     const [state, setState] = useImmer({
         isLoading: true,
@@ -21,5 +21,3 @@ function Home() {
         </>
     );
 }
-
-export default Home;
