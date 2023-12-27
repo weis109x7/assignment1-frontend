@@ -99,17 +99,15 @@ export default function Usermanagement() {
     }, [appState.loggedIn]);
 
     return (
-        <Container>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-                <Typography variant="h4">Users</Typography>
-
-                <Button variant="contained" color="inherit" startIcon={<></>}>
-                    New User
-                </Button>
-            </Stack>
-
+        <Container sx={{ mt: 3 }}>
             <Card>
-                <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
+                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
+                    <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
+                    <Button variant="contained" color="inherit">
+                        New User
+                    </Button>
+                </Stack>
+
                 <TableContainer sx={{ overflow: "unset" }}>
                     <Table sx={{ minWidth: 800 }}>
                         <colgroup>
