@@ -1,9 +1,10 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 import { useImmerReducer } from "use-immer";
 import Cookies from "js-cookie";
+import { axiosPost } from "./axiosPost.js";
 import Axios from "axios";
 Axios.defaults.baseURL = "http://localhost:3000/api/v1";
 
@@ -24,7 +25,11 @@ function Main() {
     const initialState = {
         loggedIn: false,
         user: {
-            token: Cookies.get("token"),
+            email: "",
+            isActive: "",
+            userGroup: "",
+            userId: "",
+            token: "",
         },
         groupNames: [],
     };
@@ -45,13 +50,15 @@ function Main() {
         switch (action.type) {
             case "login":
                 draft.loggedIn = true;
-                draft.user = action.data.user;
-                Axios.defaults.headers.common["Authorization"] = "Bearer " + action.data.user.token;
-                Cookies.set("token", action.data.user.token, { expires: 7 });
+                draft.user = action.user;
+                draft.user.email = draft.user.email || "";
+                Axios.defaults.headers.common["Authorization"] = "Bearer " + action.user.token;
+                Cookies.set("token", action.user.token, { expires: 7 });
                 return;
             case "logout":
                 draft.loggedIn = false;
-                delete draft.user;
+                draft.user = initialState.user;
+                draft.groupNames = initialState.groupNames;
                 delete Axios.defaults.headers.common["Authorization"];
                 Cookies.remove("token");
                 return;
@@ -68,44 +75,34 @@ function Main() {
     }
     const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
-    const controller = new AbortController();
+    const abortController = new AbortController();
     // Check if token has expired or not on first render
     useEffect(() => {
         const token = Cookies.get("token");
         if (token) {
             Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-            async function fetchResults() {
-                try {
-                    const response = await Axios.post("/checktoken", { signal: controller.signal }).catch((error) => {
-                        // return backend error
-                        if (error.response) {
-                            console.log("backend error");
-                            return error.response.data;
-                        } else {
-                            console.log("axios error");
-                            throw error;
-                        }
-                    });
-                    console.log("check token response following:");
-                    console.log(response);
-                    if (response.data) {
-                        //login
-                        dispatch({ type: "login", data: response.data });
-                        dispatch({ type: "flashMessage", success: true, message: "Your session has resumed." });
-                    } else {
-                        //logout
-                        dispatch({ type: "logout" });
-                        dispatch({ type: "flashMessage", success: false, message: "Your session has expired. Please log in again." });
-                    }
-                } catch (e) {
-                    console.log("front end error:");
-                    console.log(e);
+            async function fetchTokenVaidity() {
+                const response = await axiosPost("/checktoken", {}, abortController);
+
+                if (response.success) {
+                    //login
+                    dispatch({ type: "login", user: response.user });
+                    dispatch({ type: "flashMessage", success: true, message: "Session Resumed" });
+                } else {
+                    //logout
+                    dispatch({ type: "logout" });
+                    dispatch({ type: "flashMessage", success: false, message: response.message });
                 }
             }
-            fetchResults();
-            return () => controller.abort();
+            fetchTokenVaidity();
+            return () => abortController.abort();
         }
     }, []);
+
+    // useEffect(() => {
+    //     console.log("current state is");
+    //     console.log(state);
+    // }, [state]);
 
     return (
         <>

@@ -27,9 +27,14 @@ import MenuItem from "@mui/material/MenuItem";
 
 import { Check, Add } from "@mui/icons-material";
 
+import { axiosPost } from "../axiosPost.js";
+
+import { useNavigate } from "react-router-dom";
 // ----------------------------------------------------------------------
 
 export default function Usermanagement() {
+    const navigate = useNavigate();
+
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -94,141 +99,144 @@ export default function Usermanagement() {
             ...prevFormData,
             [name]: value,
         }));
-        console.log(newUsrObj);
     };
 
     async function handleSubmitNewGroup(e) {
         e.preventDefault();
-        try {
-            const response = await Axios.post("/group/new", { groupName: newGroupName }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+
+        const response = await axiosPost("/group/new", { groupName: newGroupName }, abortController);
+
+        if (response.success) {
+            //success new group
+            appDispatch({ type: "flashMessage", success: true, message: response.message });
+            setNewGroupName("");
+            fetchAllUsers();
+            fetchGroupNames();
+        } else {
+            switch (response.errorCode) {
+                case "ER_CHAR_INVALID": {
+                    appDispatch({ type: "flashMessage", success: false, message: "Group Name cannot contain ',' commas" });
+                    return;
                 }
-            });
-            console.log("response group/new:");
-            console.log(response);
-            if (response.data) {
-                appDispatch({ type: "flashMessage", success: true, message: "You have successfully created new group." });
-                setNewGroupName("");
-                fetchResults();
-                fetchGroupNames();
-            } else {
-                appDispatch({ type: "flashMessage", success: false, message: "group not created error." });
+                case "ER_DUP_ENTRY": {
+                    appDispatch({ type: "flashMessage", success: false, message: "Group Name already exists" });
+                    return;
+                }
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    navigate("/");
+                    return;
+                }
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
 
-    async function handleSubmit(e) {
+    async function handleSubmitNewUser(e) {
         e.preventDefault();
-        try {
-            const response = await Axios.post("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+
+        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") }, abortController);
+
+        if (response.success) {
+            //success new group
+            appDispatch({ type: "flashMessage", success: true, message: response.message });
+            setNewUsrObj({ username: "", password: "", email: "", userGroup: [] });
+            fetchAllUsers();
+            fetchGroupNames();
+        } else {
+            switch (response.errorCode) {
+                case "ER_DUP_ENTRY": {
+                    appDispatch({ type: "flashMessage", success: false, message: "Username already exists" });
+                    return;
                 }
-            });
-            console.log("response user/new:");
-            console.log(response);
-            if (response.data) {
-                appDispatch({ type: "flashMessage", success: true, message: "You have successfully created new user." });
-                setNewUsrObj({ username: "", password: "", email: "", userGroup: [] });
-                fetchResults();
-                fetchGroupNames();
-            } else {
-                appDispatch({ type: "flashMessage", success: false, message: "user not created error." });
+                case "ER_PW_INVALID": {
+                    appDispatch({ type: "flashMessage", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
+                    return;
+                }
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    navigate("/");
+                    return;
+                }
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
 
     const notFound = !dataFiltered.length && !!filterName;
 
-    const controller = new AbortController();
+    const abortController = new AbortController();
     async function fetchGroupNames() {
-        try {
-            const response = await Axios.post("/group/getGroups", { signal: controller.signal }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+        const response = await axiosPost("/group/getGroups", {}, abortController);
+
+        if (response.success) {
+            //success get groups
+            let nameArr = response.message.map((a) => a.userGroup);
+            appDispatch({ type: "setGroupNames", data: nameArr });
+        } else {
+            switch (response.errorCode) {
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    navigate("/");
+                    return;
                 }
-            });
-            console.log("response for get groupnames:");
-            console.log(response);
-            if (response.data) {
-                let nameArr = response.data.message.map((a) => a.userGroup);
-                appDispatch({ type: "setGroupNames", data: nameArr });
-            } else {
-                console.log("fail getting users");
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
-    async function fetchResults() {
-        try {
-            const response = await Axios.post("/user/getusers", { signal: controller.signal }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+    async function fetchAllUsers() {
+        const response = await axiosPost("/user/getusers", {}, abortController);
+
+        if (response.success) {
+            //success get groups
+            setAlUsers(response.message);
+        } else {
+            switch (response.errorCode) {
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    navigate("/");
+                    return;
                 }
-            });
-            console.log("response following:");
-            console.log(response);
-            if (response.data) {
-                setAlUsers(response.data.message);
-            } else {
-                console.log("fail getting users");
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
     useEffect(() => {
         if (appState.loggedIn) {
-            fetchResults();
+            fetchAllUsers();
             fetchGroupNames();
         }
-        return () => controller.abort();
+        return () => abortController.abort();
     }, [appState.loggedIn]);
 
     return (
         <Container sx={{ mt: 3 }}>
             <Card>
                 <Stack direction="column" alignItems="flex-end" mt={3}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5} mr={3}>
-                        <TextField name="newGroupName" type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} label="New Group Name" variant="outlined" autoComplete="off" placeholder="Enter New Group Name" size="small" />
-                        <Button variant="contained" type="submit" color="inherit" onClick={handleSubmitNewGroup}>
-                            <Add />
-                        </Button>
-                    </Stack>
+                    <form onSubmit={handleSubmitNewGroup}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5} mr={3}>
+                            <TextField name="newGroupName" type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} label="New Group Name" variant="outlined" autoComplete="off" placeholder="Enter New Group Name" size="small" required />
+                            <Button variant="contained" type="submit" color="inherit">
+                                <Add />
+                            </Button>
+                        </Stack>
+                    </form>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
                         <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
 
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmitNewUser}>
                             <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="flex-end">
                                 <TextField name="username" type="text" value={newUsrObj.username} onChange={(e) => handleNewUsrInput(e)} label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" size="small" />
 
@@ -275,7 +283,7 @@ export default function Usermanagement() {
                         <UserTableHead order={order} orderBy={orderBy} rowCount={allUsers.length} onRequestSort={handleSort} headLabel={[{ id: "name", label: "Name" }, { id: "password", label: "password" }, { id: "email", label: "Email" }, { id: "role", label: "Role" }, { id: "isActive", label: "active", align: "center" }, { id: "" }]} />
                         <TableBody>
                             {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                                <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup} status={row.isActive} />
+                                <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup} status={row.isActive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} />
                             ))}
 
                             <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allUsers.length)} />

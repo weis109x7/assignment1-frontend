@@ -17,7 +17,14 @@ export default function Header(props) {
                         <Box sx={{ color: "text.primary", "&:hover": { color: "text.secondary" } }}>TMS</Box>
                     </Link>
                 </h1>
-                {appState.loggedIn ? <HeaderLoggedIn /> : <></>}
+
+                {appState.loggedIn ? (
+                    <>
+                        <h3>{appState.user.userId}</h3> <HeaderLoggedIn />
+                    </>
+                ) : (
+                    <></>
+                )}
             </Toolbar>
         </AppBar>
     );

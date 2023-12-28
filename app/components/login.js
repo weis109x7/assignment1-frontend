@@ -2,12 +2,15 @@ import React, { useEffect, useContext } from "react";
 import StateContext from "../StateContext.js";
 import DispatchContext from "../DispatchContext.js";
 import { useImmer } from "use-immer";
-import Axios from "axios";
+
+import { axiosPost } from "../axiosPost.js";
 import { Link } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Login() {
+    const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -15,35 +18,36 @@ export default function Login() {
     const [password, setPassword] = useImmer();
 
     const [loginError, setLoginError] = useImmer(false);
+    const abortController = new AbortController();
 
     async function handleSubmit(e) {
         e.preventDefault();
-        try {
-            const response = await Axios.post("/login", { userId, password }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+
+        const response = await axiosPost("/login", { userId, password }, abortController);
+        if (response.success) {
+            //login
+            appDispatch({ type: "login", user: response.user });
+            appDispatch({ type: "flashMessage", success: true, message: "logged in sucessfully" });
+        } else {
+            switch (response.errorCode) {
+                case "ER_INVALID_CREDEN": {
+                    appDispatch({ type: "flashMessage", success: false, message: "Invalid Credentials" });
+                    setLoginError(true);
+                    setTimeout(() => {
+                        setLoginError(false);
+                    }, 2000);
+                    return;
                 }
-            });
-            console.log("response following:");
-            console.log(response);
-            if (response.data) {
-                appDispatch({ type: "login", data: response.data });
-                appDispatch({ type: "flashMessage", success: true, message: "You have successfully logged in." });
-            } else {
-                appDispatch({ type: "flashMessage", success: false, message: "Invalid credentials." });
-                setLoginError(true);
-                setTimeout(() => {
-                    setLoginError(false);
-                }, 2000);
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    navigate("/");
+                    return;
+                }
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
 

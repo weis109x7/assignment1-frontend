@@ -4,7 +4,7 @@ import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import { useImmer } from "use-immer";
-import Axios from "axios";
+import { axiosPost } from "../../axiosPost.js";
 import StateContext from "../../StateContext.js";
 import DispatchContext from "../../DispatchContext.js";
 import Select from "@mui/material/Select";
@@ -20,7 +20,7 @@ import { Check } from "@mui/icons-material";
 
 // ----------------------------------------------------------------------
 
-export default function UserTableRow({ userId, email, userGroup, status, password }) {
+export default function UserTableRow({ userId, email, userGroup, status, password, fetchAllUsers, fetchGroupNames }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -31,6 +31,8 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     const [isActive, setIsActive] = useImmer(status);
     const [newPass, setNewPass] = useImmer("");
 
+    const abortController = new AbortController();
+
     const handleEdit = (event) => {
         setEditable((editable) => !editable);
     };
@@ -40,7 +42,8 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     };
 
     const handleMulti = (event) => {
-        setNewUserGroup(event);
+        if (event) setNewUserGroup(event.join(","));
+        else setNewUserGroup("");
     };
 
     const cancelEdit = (event) => {
@@ -52,29 +55,24 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
 
     async function handleSubmit(e) {
         e.preventDefault();
-        console.log(newPass);
-        try {
-            const response = await Axios.post("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup.join(","), isActive }).catch((error) => {
-                // return backend error
-                if (error.response) {
-                    console.log("backend error");
-                    return error.response.data;
-                } else {
-                    console.log("axios error");
-                    throw error;
+        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup, isActive }, abortController);
+
+        if (response.success) {
+            //success edit
+            appDispatch({ type: "flashMessage", success: true, message: response.message });
+            fetchAllUsers();
+            setEditable(false);
+        } else {
+            switch (response.errorCode) {
+                case "ER_CHAR_INVALID": {
+                    appDispatch({ type: "ER_PW_INVALID", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
+                    return;
                 }
-            });
-            console.log("response for user edit:");
-            console.log(response);
-            if (response.data) {
-                appDispatch({ type: "flashMessage", success: true, message: "You have successfully edit user." });
-                setEditable(false);
-            } else {
-                appDispatch({ type: "flashMessage", success: false, message: "edit user failed." });
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
             }
-        } catch (e) {
-            console.log("front end error:");
-            console.log(e);
         }
     }
 
@@ -84,35 +82,9 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
         userGroup = undefined;
     }
 
-    const controller = new AbortController();
     useEffect(() => {
-        async function fetchResults() {
-            try {
-                const response = await Axios.post("/group/getGroups", { signal: controller.signal }).catch((error) => {
-                    // return backend error
-                    if (error.response) {
-                        console.log("backend error");
-                        return error.response.data;
-                    } else {
-                        console.log("axios error");
-                        throw error;
-                    }
-                });
-                console.log("response for get groupnames:");
-                console.log(response);
-                if (response.data) {
-                    let nameArr = response.data.message.map((a) => a.userGroup);
-                    appDispatch({ type: "setGroupNames", data: nameArr });
-                } else {
-                    console.log("fail getting users");
-                }
-            } catch (e) {
-                console.log("front end error:");
-                console.log(e);
-            }
-        }
-        if (editable) fetchResults();
-        return () => controller.abort();
+        if (editable) fetchGroupNames();
+        return () => abortController.abort();
     }, [editable]);
 
     return (
@@ -162,7 +134,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                     {editable ? (
                         <TextField
                             value={isActive}
-                            onChange={(e) => setIsActive(e.target.value)}
+                            onChange={handleisActive}
                             select // tell TextField to render select
                             label="active"
                         >

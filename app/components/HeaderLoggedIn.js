@@ -6,7 +6,9 @@ import StateContext from "../StateContext.js";
 import { Button } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
+import { useNavigate } from "react-router-dom";
 export default function HeaderLoggedIn(props) {
+    const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
     let location = useLocation();
