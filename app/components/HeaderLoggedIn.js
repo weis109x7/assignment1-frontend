@@ -1,12 +1,14 @@
+//react essentials
 import React, { useContext } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+
+//appstate and dispatch
 import DispatchContext from "../DispatchContext.js";
 import StateContext from "../StateContext.js";
 
 import { Button } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-import { useNavigate } from "react-router-dom";
 export default function HeaderLoggedIn(props) {
     const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
@@ -37,14 +39,15 @@ export default function HeaderLoggedIn(props) {
     return (
         <div>
             <ThemeProvider theme={theme}>
+                {/* show button only if user group contains admin */}
                 {appState.user.userGroup.split(",").includes("admin") ? (
+                    // if user is on page then change color and disable button
                     <Button component={RouterLink} to="/usermanagement" variant="contained" disabled={location.pathname !== "/usermanagement" ? false : true}>
                         User Management
                     </Button>
                 ) : (
                     <></>
                 )}
-
                 <Button component={RouterLink} to="/myprofile" variant="contained" disabled={location.pathname !== "/myprofile" ? false : true} sx={{ ml: 1 }}>
                     My Profile
                 </Button>

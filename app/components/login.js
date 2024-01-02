@@ -1,22 +1,25 @@
-import React, { useEffect, useContext } from "react";
-import StateContext from "../StateContext.js";
-import DispatchContext from "../DispatchContext.js";
+//react essentials
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+
+//modules
 import { useImmer } from "use-immer";
 
-import { axiosPost } from "../axiosPost.js";
-import { Link } from "react-router-dom";
+//state and dispatch
+import DispatchContext from "../DispatchContext.js";
 
-import { useNavigate } from "react-router-dom";
+//axios
+import { axiosPost } from "../axiosPost.js";
+
+//material ui
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Login() {
     const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
-    const appState = useContext(StateContext);
 
     const [userId, setUserId] = useImmer();
     const [password, setPassword] = useImmer();
-
     const [loginError, setLoginError] = useImmer(false);
     const abortController = new AbortController();
 

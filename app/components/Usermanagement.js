@@ -1,16 +1,15 @@
 import React, { useEffect, useContext } from "react";
-import Axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+import { useImmer } from "use-immer";
+
+import { axiosPost } from "../axiosPost.js";
+
 import DispatchContext from "../DispatchContext.js";
 import StateContext from "../StateContext.js";
-import Card from "@mui/material/Card";
-import Stack from "@mui/material/Stack";
-import Table from "@mui/material/Table";
-import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
-import TableBody from "@mui/material/TableBody";
-import Typography from "@mui/material/Typography";
-import TableContainer from "@mui/material/TableContainer";
-import TablePagination from "@mui/material/TablePagination";
+
+import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField } from "@mui/material";
+import { Check, Add } from "@mui/icons-material";
 
 import TableNoData from "./user/table-no-data.jsx";
 import UserTableRow from "./user/user-table-row.jsx";
@@ -18,40 +17,23 @@ import UserTableHead from "./user/user-table-head.jsx";
 import TableEmptyRows from "./user/table-empty-rows.jsx";
 import UserTableToolbar from "./user/user-table-toolbar.jsx";
 import { emptyRows, applyFilter, getComparator } from "./user/utils";
-import { useImmer } from "use-immer";
-import { Autocomplete } from "@mui/material";
 
-import { Grid, Paper, TextField } from "@mui/material";
-
-import MenuItem from "@mui/material/MenuItem";
-
-import { Check, Add } from "@mui/icons-material";
-
-import { axiosPost } from "../axiosPost.js";
-
-import { useNavigate } from "react-router-dom";
 // ----------------------------------------------------------------------
 
 export default function Usermanagement() {
     const navigate = useNavigate();
-
+    const abortController = new AbortController();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
     const [page, setPage] = useImmer(0);
-
     const [order, setOrder] = useImmer("asc");
-
     const [orderBy, setOrderBy] = useImmer("name");
-
     const [filterName, setFilterName] = useImmer("");
-
     const [rowsPerPage, setRowsPerPage] = useImmer(5);
 
     const [allUsers, setAlUsers] = useImmer([]);
-
     const [newGroupName, setNewGroupName] = useImmer("");
-
     const [newUsrObj, setNewUsrObj] = useImmer({
         username: "",
         password: "",
@@ -171,7 +153,6 @@ export default function Usermanagement() {
 
     const notFound = !dataFiltered.length && !!filterName;
 
-    const abortController = new AbortController();
     async function fetchGroupNames() {
         const response = await axiosPost("/group/getGroups", {}, abortController);
 
@@ -214,9 +195,20 @@ export default function Usermanagement() {
         }
     }
     useEffect(() => {
-        if (appState.loggedIn) {
-            fetchAllUsers();
-            fetchGroupNames();
+        switch (appState.loggedIn) {
+            case undefined: {
+                navigate("/");
+                appDispatch({ type: "logout" });
+                break;
+            }
+            case true: {
+                fetchAllUsers();
+                fetchGroupNames();
+                break;
+            }
+            case false: {
+                break;
+            }
         }
         return () => abortController.abort();
     }, [appState.loggedIn]);

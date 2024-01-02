@@ -1,19 +1,23 @@
+//import router essentials
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+//import modules immer,toastify,axios etcs
 import { useImmerReducer } from "use-immer";
 import Cookies from "js-cookie";
+import { ToastContainer, toast } from "react-toastify";
 import { axiosPost } from "./axiosPost.js";
 import Axios from "axios";
+
+//set api url
 Axios.defaults.baseURL = "http://localhost:3000/api/v1";
 
-import { ToastContainer, toast } from "react-toastify";
-
+//import state dispatch context
 import StateContext from "./StateContext.js";
 import DispatchContext from "./DispatchContext.js";
 
-// My Components
+//import My Components
 import Header from "./components/Header.js";
 import Home from "./components/Home.js";
 import Login from "./components/login.js";
@@ -22,6 +26,7 @@ import Usermanagement from "./components/Usermanagement.js";
 import Profile from "./components/Profile.js";
 
 function Main() {
+    //init empty user state
     const initialState = {
         loggedIn: false,
         user: {
@@ -34,6 +39,10 @@ function Main() {
         groupNames: [],
     };
 
+    //init abortController for cancelling axios post calls
+    const abortController = new AbortController();
+
+    //show toast func
     const showToastMessage = (success, message) => {
         if (success) {
             toast.success(message, {
@@ -46,16 +55,21 @@ function Main() {
         }
     };
 
+    //reducer func
     function ourReducer(draft, action) {
         switch (action.type) {
             case "login":
                 draft.loggedIn = true;
                 draft.user = action.user;
+                //if email is null set to empty string to avoid errors
                 draft.user.email = draft.user.email || "";
+                //set auth token in header
                 Axios.defaults.headers.common["Authorization"] = "Bearer " + action.user.token;
+                //set cookies
                 Cookies.set("token", action.user.token, { expires: 7 });
                 return;
             case "logout":
+                //set logout, clear user data remove auth header remove cookies
                 draft.loggedIn = false;
                 draft.user = initialState.user;
                 draft.groupNames = initialState.groupNames;
@@ -68,14 +82,16 @@ function Main() {
             case "setGroupNames":
                 draft.groupNames = action.data;
                 return;
-            case "updateEmail":
-                draft.user.email = action.data;
+            case "updateUser":
+                draft.user = { ...draft.user, ...action.user };
                 return;
+            case "forceLogout": {
+                draft.loggedIn = undefined;
+            }
         }
     }
     const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
-    const abortController = new AbortController();
     // Check if token has expired or not on first render
     useEffect(() => {
         const token = Cookies.get("token");
@@ -83,19 +99,31 @@ function Main() {
             Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
             async function fetchTokenVaidity() {
                 const response = await axiosPost("/checktoken", {}, abortController);
-
                 if (response.success) {
                     //login
                     dispatch({ type: "login", user: response.user });
                     dispatch({ type: "flashMessage", success: true, message: "Session Resumed" });
                 } else {
-                    //logout
-                    dispatch({ type: "logout" });
-                    dispatch({ type: "flashMessage", success: false, message: response.message });
+                    switch (response.errorCode) {
+                        //invalid jwt so force logout
+                        case "ER_JWT_INVALID": {
+                            //set login state to undefined so landing page can know to redirect
+                            dispatch({ type: "forceLogout" });
+                            dispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                            break;
+                        }
+                        default: {
+                            console.log("uncaught error");
+                            dispatch({ type: "flashMessage", success: false, message: response.message });
+                        }
+                    }
                 }
             }
             fetchTokenVaidity();
             return () => abortController.abort();
+        } else {
+            //set login state to undefined so landing page can know to redirect
+            dispatch({ type: "forceLogout" });
         }
     }, []);
 

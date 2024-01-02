@@ -1,10 +1,14 @@
+//import react essentials
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 
-import HeaderLoggedIn from "./HeaderLoggedIn.js";
+//import appstate
 import StateContext from "../StateContext.js";
 
 import { AppBar, Toolbar, Box } from "@mui/material";
+
+//import my components
+import HeaderLoggedIn from "./HeaderLoggedIn.js";
 
 export default function Header(props) {
     const appState = useContext(StateContext);
@@ -20,6 +24,7 @@ export default function Header(props) {
 
                 {appState.loggedIn ? (
                     <>
+                        {/* if logged in show logged in header and buttons else show nothing */}
                         <h3>{appState.user.userId}</h3> <HeaderLoggedIn />
                     </>
                 ) : (

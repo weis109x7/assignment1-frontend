@@ -1,12 +1,13 @@
 import React, { useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+
 import StateContext from "../StateContext.js";
 import DispatchContext from "../DispatchContext.js";
+
 import { useImmer } from "use-immer";
 import { axiosPost } from "../axiosPost.js";
 
 import Stack from "@mui/material/Stack";
-
-import { useNavigate } from "react-router-dom";
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Profile() {
@@ -36,7 +37,7 @@ export default function Profile() {
 
         if (response.success) {
             appDispatch({ type: "flashMessage", success: true, message: "sucessfully updated own profile" });
-            appDispatch({ type: "updateEmail", data: email });
+            appDispatch({ type: "updateUser", user: { email: email } });
             setEditable(false);
             setPassword("");
         } else {
@@ -63,8 +64,21 @@ export default function Profile() {
     }
 
     useEffect(() => {
-        setEmail(appState.user.email);
-    }, [appState.user.email]);
+        switch (appState.loggedIn) {
+            case undefined: {
+                navigate("/");
+                appDispatch({ type: "logout" });
+                break;
+            }
+            case true: {
+                setEmail(appState.user.email);
+                break;
+            }
+            case false: {
+                break;
+            }
+        }
+    }, [appState.loggedIn]);
 
     return (
         <>
