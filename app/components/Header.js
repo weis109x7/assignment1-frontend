@@ -52,13 +52,14 @@ export default function Header(props) {
             }
             fetchTokenVaidity();
         } else {
+            appDispatch({ type: "logout" });
             navigate("/");
         }
     }, []);
 
     //redirect to login page when user is loggedout
     useEffect(() => {
-        if (!appState.loggedIn) {
+        if (appState.loggedIn == false) {
             navigate("/");
         }
     }, [appState.loggedIn]);

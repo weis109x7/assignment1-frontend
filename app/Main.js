@@ -29,7 +29,7 @@ function Main() {
     // const navigate = useNavigate();
     //init empty user state
     const initialState = {
-        loggedIn: false,
+        loggedIn: undefined,
         user: {
             email: "",
             isActive: "",
@@ -102,7 +102,7 @@ function Main() {
                             <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
                             <Route path="usermanagement" element={state.loggedIn ? <Usermanagement /> : <></>} />
                             <Route path="myprofile" element={state.loggedIn ? <Profile /> : <></>} />
-                            <Route path="*" element={<NotFound />} />
+                            <Route path="*" element={state.loggedIn ? <NotFound /> : <></>} />
                         </Routes>
                     </BrowserRouter>
                 </DispatchContext.Provider>
