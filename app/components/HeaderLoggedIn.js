@@ -1,6 +1,6 @@
 //react essentials
 import React, { useContext } from "react";
-import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 
 //appstate and dispatch
 import DispatchContext from "../DispatchContext.js";
@@ -10,7 +10,6 @@ import { Button } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 export default function HeaderLoggedIn(props) {
-    const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
     let location = useLocation();

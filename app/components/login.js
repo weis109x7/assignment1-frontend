@@ -44,7 +44,6 @@ export default function Login() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {

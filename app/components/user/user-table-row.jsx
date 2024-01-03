@@ -49,7 +49,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
         setIsActive(status);
     };
 
-    async function handleSubmit(e) {
+    async function handleEditSubmit(e) {
         e.preventDefault();
         const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup, isActive });
 
@@ -65,7 +65,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                     break;
                 }
                 case "ER_NOT_LOGIN": {
-                    appDispatch({ type: "forceLogout" });
+                    appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     break;
                 }
@@ -150,7 +150,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                 <TableCell align="right">
                     {editable ? (
                         <>
-                            <IconButton onClick={handleSubmit} size="small">
+                            <IconButton onClick={handleEditSubmit} size="small">
                                 save
                             </IconButton>
                             <IconButton onClick={cancelEdit} size="small">

@@ -54,7 +54,6 @@ export default function Profile() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {
@@ -67,21 +66,10 @@ export default function Profile() {
 
     //run after main.js has checked user token
     useEffect(() => {
-        switch (appState.loggedIn) {
-            case undefined: {
-                navigate("/");
-                appDispatch({ type: "logout" });
-                break;
-            }
-            case true: {
-                setEmail(appState.user.email);
-                break;
-            }
-            case false: {
-                break;
-            }
+        if (appState.loggedIn) {
+            setEmail(appState.user.email);
         }
-    }, [appState.loggedIn]);
+    }, [appState.user.email]);
 
     return (
         <>

@@ -106,7 +106,6 @@ export default function Usermanagement() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {
@@ -142,7 +141,6 @@ export default function Usermanagement() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {
@@ -168,7 +166,6 @@ export default function Usermanagement() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {
@@ -190,7 +187,6 @@ export default function Usermanagement() {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                    navigate("/");
                     break;
                 }
                 default: {
@@ -202,20 +198,9 @@ export default function Usermanagement() {
         }
     }
     useEffect(() => {
-        switch (appState.loggedIn) {
-            case undefined: {
-                navigate("/");
-                appDispatch({ type: "logout" });
-                break;
-            }
-            case true: {
-                fetchAllUsers();
-                fetchGroupNames();
-                break;
-            }
-            case false: {
-                break;
-            }
+        if (appState.loggedIn) {
+            fetchAllUsers();
+            fetchGroupNames();
         }
     }, [appState.loggedIn]);
 

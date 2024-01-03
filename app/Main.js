@@ -1,7 +1,7 @@
 //import router essentials
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 //import modules immer,toastify,axios etcs
 import { useImmerReducer } from "use-immer";
@@ -26,6 +26,7 @@ import Usermanagement from "./components/Usermanagement.js";
 import Profile from "./components/Profile.js";
 
 function Main() {
+    // const navigate = useNavigate();
     //init empty user state
     const initialState = {
         loggedIn: false,
@@ -82,52 +83,9 @@ function Main() {
             case "updateUser":
                 draft.user = { ...draft.user, ...action.user };
                 return;
-            case "forceLogout": {
-                draft.loggedIn = undefined;
-                return;
-            }
         }
     }
     const [state, dispatch] = useImmerReducer(ourReducer, initialState);
-
-    // Check if token has expired or not on first render
-    useEffect(() => {
-        const token = Cookies.get("token");
-        if (token) {
-            Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-            async function fetchTokenVaidity() {
-                const response = await axiosPost("/checktoken", {});
-                if (response.success) {
-                    //login
-                    dispatch({ type: "login", user: response.user });
-                    dispatch({ type: "flashMessage", success: true, message: "Session Resumed" });
-                } else {
-                    switch (response.errorCode) {
-                        //invalid jwt so force logout
-                        case "ER_JWT_INVALID": {
-                            //set login state to undefined so landing page can know to redirect
-                            dispatch({ type: "forceLogout" });
-                            dispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
-                            break;
-                        }
-                        case "ER_NOT_LOGIN": {
-                            dispatch({ type: "forceLogout" });
-                            dispatch({ type: "flashMessage", success: false, message: "User has been disabled!" });
-                            break;
-                        }
-                        default: {
-                            console.log("uncaught error");
-                            dispatch({ type: "flashMessage", success: false, message: response.message });
-                        }
-                    }
-                }
-            }
-            fetchTokenVaidity();
-        } else {
-            //set login state to undefined so landing page can know to redirect
-            dispatch({ type: "forceLogout" });
-        }
-    }, []);
 
     // useEffect(() => {
     //     console.log("current state is");
@@ -142,8 +100,8 @@ function Main() {
                         <Header />
                         <Routes>
                             <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
-                            <Route path="usermanagement" element={<Usermanagement />} />
-                            <Route path="myprofile" element={<Profile />} />
+                            <Route path="usermanagement" element={state.loggedIn ? <Usermanagement /> : <></>} />
+                            <Route path="myprofile" element={state.loggedIn ? <Profile /> : <></>} />
                             <Route path="*" element={<NotFound />} />
                         </Routes>
                     </BrowserRouter>
