@@ -198,9 +198,12 @@ export default function Usermanagement() {
         }
     }
     useEffect(() => {
-        if (appState.loggedIn) {
+        if (appState.user.userGroup.split(",").includes("admin")) {
             fetchAllUsers();
             fetchGroupNames();
+        } else {
+            navigate("/");
+            appDispatch({ type: "flashMessage", success: false, message: "Unauthorized" });
         }
     }, [appState.loggedIn]);
 

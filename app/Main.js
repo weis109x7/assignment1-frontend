@@ -1,7 +1,7 @@
 //import router essentials
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 
 //import modules immer,toastify,axios etcs
 import { useImmerReducer } from "use-immer";
@@ -24,6 +24,7 @@ import Login from "./components/login.js";
 import NotFound from "./components/NotFound.js";
 import Usermanagement from "./components/Usermanagement.js";
 import Profile from "./components/Profile.js";
+import Loading from "./components/Loading.js";
 
 function Main() {
     // const navigate = useNavigate();
@@ -59,7 +60,7 @@ function Main() {
             case "login":
                 draft.loggedIn = true;
                 draft.user = action.user;
-                //if email is null set to empty string to avoid errors
+                //if email is null, set to empty string to avoid errors
                 draft.user.email = draft.user.email || "";
                 //set auth token in header
                 Axios.defaults.headers.common["Authorization"] = "Bearer " + action.user.token;
@@ -92,18 +93,61 @@ function Main() {
     //     console.log(state);
     // }, [state]);
 
+    // Check if token has expired or not on first render
+    useEffect(() => {
+        const token = Cookies.get("token");
+        if (token) {
+            Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+            async function fetchTokenVaidity() {
+                const response = await axiosPost("/checktoken", {});
+                if (response.success) {
+                    //login
+                    dispatch({ type: "login", user: response.user });
+                    dispatch({ type: "flashMessage", success: true, message: "Session Resumed" });
+                } else {
+                    switch (response.errorCode) {
+                        //invalid jwt so force logout
+                        case "ER_JWT_INVALID": {
+                            dispatch({ type: "logout" });
+                            dispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                            break;
+                        }
+                        case "ER_NOT_LOGIN": {
+                            dispatch({ type: "logout" });
+                            dispatch({ type: "flashMessage", success: false, message: "User has been disabled!" });
+                            break;
+                        }
+                        default: {
+                            console.log("uncaught error");
+                            dispatch({ type: "flashMessage", success: false, message: response.message });
+                        }
+                    }
+                }
+            }
+            fetchTokenVaidity();
+        } else {
+            dispatch({ type: "logout" });
+        }
+    }, []);
+
     return (
         <>
             <StateContext.Provider value={state}>
                 <DispatchContext.Provider value={dispatch}>
                     <BrowserRouter>
-                        <Header />
-                        <Routes>
-                            <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
-                            <Route path="usermanagement" element={state.loggedIn ? <Usermanagement /> : <></>} />
-                            <Route path="myprofile" element={state.loggedIn ? <Profile /> : <></>} />
-                            <Route path="*" element={state.loggedIn ? <NotFound /> : <></>} />
-                        </Routes>
+                        {state.loggedIn == undefined ? (
+                            <Loading />
+                        ) : (
+                            <>
+                                <Header />
+                                <Routes>
+                                    <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
+                                    <Route path="usermanagement" element={state.loggedIn ? <Usermanagement /> : <></>} />
+                                    <Route path="myprofile" element={state.loggedIn ? <Profile /> : <></>} />
+                                    <Route path="*" element={state.loggedIn ? <NotFound /> : <></>} />
+                                </Routes>
+                            </>
+                        )}
                     </BrowserRouter>
                 </DispatchContext.Provider>
             </StateContext.Provider>

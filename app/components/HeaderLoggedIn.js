@@ -51,7 +51,7 @@ export default function HeaderLoggedIn(props) {
                     My Profile
                 </Button>
             </ThemeProvider>
-            <Button component={RouterLink} to="/" variant="contained" onClick={handleLogout} color="error" sx={{ ml: 1 }}>
+            <Button variant="contained" onClick={handleLogout} color="error" sx={{ ml: 1 }}>
                 Sign Out
             </Button>
         </div>
