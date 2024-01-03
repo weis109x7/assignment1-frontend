@@ -15,7 +15,6 @@ import { axiosPost } from "../axiosPost.js";
 import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Login() {
-    const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
 
     const [userId, setUserId] = useImmer();

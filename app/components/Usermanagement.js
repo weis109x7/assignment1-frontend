@@ -169,7 +169,7 @@ export default function Usermanagement() {
                 case "ER_NOT_LOGIN": {
                     //unauthorized
                     appDispatch({ type: "logout" });
-                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
+                    // appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     break;
                 }
                 default: {
