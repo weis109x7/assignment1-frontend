@@ -27,7 +27,6 @@ import Profile from "./components/Profile.js";
 import Loading from "./components/Loading.js";
 
 function Main() {
-    // const navigate = useNavigate();
     //init empty user state
     const initialState = {
         loggedIn: undefined,
@@ -54,7 +53,7 @@ function Main() {
         }
     };
 
-    //reducer func
+    //reducer func / dispatch
     function ourReducer(draft, action) {
         switch (action.type) {
             case "login":

@@ -91,6 +91,7 @@ export default function Usermanagement() {
             //success new group
             appDispatch({ type: "flashMessage", success: true, message: response.message });
             setNewGroupName("");
+            //get fresh data
             fetchAllUsers();
             fetchGroupNames();
         } else {
@@ -125,7 +126,9 @@ export default function Usermanagement() {
         if (response.success) {
             //success new group
             appDispatch({ type: "flashMessage", success: true, message: response.message });
+            //reset newUsr obj
             setNewUsrObj({ username: "", password: "", email: "", userGroup: [] });
+            //get fresh data
             fetchAllUsers();
             fetchGroupNames();
         } else {
@@ -154,9 +157,9 @@ export default function Usermanagement() {
 
     const notFound = !dataFiltered.length && !!filterName;
 
+    //func to grab groupNames
     async function fetchGroupNames() {
         const response = await axiosPost("/group/getGroups", {});
-
         if (response.success) {
             //success get groups
             let nameArr = response.message.map((a) => a.userGroup);
@@ -164,6 +167,7 @@ export default function Usermanagement() {
         } else {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
+                    //unauthorized
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     break;
@@ -176,6 +180,8 @@ export default function Usermanagement() {
             }
         }
     }
+
+    //func to grab all usr Data
     async function fetchAllUsers() {
         const response = await axiosPost("/user/getusers", {});
 
@@ -185,6 +191,7 @@ export default function Usermanagement() {
         } else {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
+                    //unauthorized
                     appDispatch({ type: "logout" });
                     appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     break;
@@ -197,11 +204,13 @@ export default function Usermanagement() {
             }
         }
     }
+    //run after usr has resumed session or is already logged in and ONLY if usr is admin
     useEffect(() => {
         if (appState.user.userGroup.split(",").includes("admin")) {
             fetchAllUsers();
             fetchGroupNames();
         } else {
+            //else throw them back to home and flash unauthorized
             navigate("/");
             appDispatch({ type: "flashMessage", success: false, message: "Unauthorized" });
         }

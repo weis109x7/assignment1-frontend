@@ -11,7 +11,6 @@ import { axiosPost } from "../axiosPost.js";
 import { Stack, Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Profile() {
-    const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -64,11 +63,9 @@ export default function Profile() {
         }
     }
 
-    //run after main.js has checked user token
+    //keep email state updated
     useEffect(() => {
-        if (appState.loggedIn) {
-            setEmail(appState.user.email);
-        }
+        setEmail(appState.user.email);
     }, [appState.user.email]);
 
     return (

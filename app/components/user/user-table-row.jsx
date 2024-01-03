@@ -85,7 +85,10 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     }
 
     useEffect(() => {
-        if (editable) fetchGroupNames();
+        if (editable) {
+            fetchGroupNames();
+            fetchAllUsers();
+        }
     }, [editable]);
 
     return (
