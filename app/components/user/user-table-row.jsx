@@ -7,13 +7,11 @@ import { useImmer } from "use-immer";
 import { axiosPost } from "../../axiosPost.js";
 import StateContext from "../../StateContext.js";
 import DispatchContext from "../../DispatchContext.js";
-import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 
-import InputLabel from "@mui/material/InputLabel";
-import { Grid, Container, Paper, TextField, Button } from "@mui/material";
+import { TextField } from "@mui/material";
 
 import { Autocomplete } from "@mui/material";
 import { Check } from "@mui/icons-material";
@@ -30,8 +28,6 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     const [newUserGroup, setNewUserGroup] = useImmer(userGroup);
     const [isActive, setIsActive] = useImmer(status);
     const [newPass, setNewPass] = useImmer("");
-
-    const abortController = new AbortController();
 
     const handleEdit = (event) => {
         setEditable((editable) => !editable);
@@ -55,7 +51,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
 
     async function handleSubmit(e) {
         e.preventDefault();
-        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup, isActive }, abortController);
+        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup, isActive });
 
         if (response.success) {
             //success edit
@@ -66,11 +62,17 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
             switch (response.errorCode) {
                 case "ER_CHAR_INVALID": {
                     appDispatch({ type: "ER_PW_INVALID", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
-                    return;
+                    break;
+                }
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "forceLogout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
@@ -84,7 +86,6 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
 
     useEffect(() => {
         if (editable) fetchGroupNames();
-        return () => abortController.abort();
     }, [editable]);
 
     return (

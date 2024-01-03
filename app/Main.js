@@ -39,9 +39,6 @@ function Main() {
         groupNames: [],
     };
 
-    //init abortController for cancelling axios post calls
-    const abortController = new AbortController();
-
     //show toast func
     const showToastMessage = (success, message) => {
         if (success) {
@@ -87,6 +84,7 @@ function Main() {
                 return;
             case "forceLogout": {
                 draft.loggedIn = undefined;
+                return;
             }
         }
     }
@@ -98,7 +96,7 @@ function Main() {
         if (token) {
             Axios.defaults.headers.common["Authorization"] = "Bearer " + token;
             async function fetchTokenVaidity() {
-                const response = await axiosPost("/checktoken", {}, abortController);
+                const response = await axiosPost("/checktoken", {});
                 if (response.success) {
                     //login
                     dispatch({ type: "login", user: response.user });
@@ -112,6 +110,11 @@ function Main() {
                             dispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
                             break;
                         }
+                        case "ER_NOT_LOGIN": {
+                            dispatch({ type: "forceLogout" });
+                            dispatch({ type: "flashMessage", success: false, message: "User has been disabled!" });
+                            break;
+                        }
                         default: {
                             console.log("uncaught error");
                             dispatch({ type: "flashMessage", success: false, message: response.message });
@@ -120,7 +123,6 @@ function Main() {
                 }
             }
             fetchTokenVaidity();
-            return () => abortController.abort();
         } else {
             //set login state to undefined so landing page can know to redirect
             dispatch({ type: "forceLogout" });

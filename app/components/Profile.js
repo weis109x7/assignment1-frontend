@@ -1,3 +1,4 @@
+//react essentials
 import React, { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,8 +8,7 @@ import DispatchContext from "../DispatchContext.js";
 import { useImmer } from "use-immer";
 import { axiosPost } from "../axiosPost.js";
 
-import Stack from "@mui/material/Stack";
-import { Grid, Container, Paper, TextField, Button } from "@mui/material";
+import { Stack, Grid, Container, Paper, TextField, Button } from "@mui/material";
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -21,8 +21,7 @@ export default function Profile() {
 
     const [loginError, setLoginError] = useImmer(false);
 
-    const abortController = new AbortController();
-
+    //handle when edit is clicked, set fields to editable
     const handleEdit = (event) => {
         if (editable) {
             setEmail(appState.user.email);
@@ -31,10 +30,12 @@ export default function Profile() {
         setEditable((editable) => !editable);
     };
 
-    async function handleSubmit(e) {
+    //handle when save is clicked
+    async function handleSaveSubmit(e) {
         e.preventDefault();
-        const response = await axiosPost("/user/update", { email, password }, abortController);
+        const response = await axiosPost("/user/update", { email, password });
 
+        //if success, update appstate with new email and flash message
         if (response.success) {
             appDispatch({ type: "flashMessage", success: true, message: "sucessfully updated own profile" });
             appDispatch({ type: "updateUser", user: { email: email } });
@@ -44,25 +45,27 @@ export default function Profile() {
             switch (response.errorCode) {
                 case "ER_PW_INVALID": {
                     appDispatch({ type: "flashMessage", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
-                    return;
+                    setLoginError(true);
+                    setTimeout(() => {
+                        setLoginError(false);
+                    }, 2000);
+                    break;
                 }
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
                 }
             }
-            setLoginError(true);
-            setTimeout(() => {
-                setLoginError(false);
-            }, 2000);
         }
     }
 
+    //run after main.js has checked user token
     useEffect(() => {
         switch (appState.loggedIn) {
             case undefined: {
@@ -92,7 +95,7 @@ export default function Profile() {
                         </Grid>
 
                         <Paper elevation={20} style={{ padding: "20px" }}>
-                            <form onSubmit={handleSubmit}>
+                            <form onSubmit={handleSaveSubmit}>
                                 <Stack direction="column" alignItems="center" justifyContent="space-between" spacing={2}>
                                     <TextField value={email} disabled={!editable} onChange={(e) => setEmail(e.target.value)} type="text" label="E-mail" variant="outlined" autoComplete="off" placeholder="Enter Username" sx={{ mb: 2 }} fullWidth />
 

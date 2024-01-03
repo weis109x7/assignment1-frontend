@@ -1,8 +1,8 @@
 import Axios from "axios";
 
-export async function axiosPost(apiURL, body, abortController) {
+export async function axiosPost(apiURL, body) {
     try {
-        const response = await Axios.post(apiURL, { ...body, signal: abortController.signal }).catch((error) => {
+        const response = await Axios.post(apiURL, { ...body }).catch((error) => {
             // return backend error
             if (error.response) {
                 console.log("response error");

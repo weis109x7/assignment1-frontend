@@ -22,7 +22,6 @@ import { emptyRows, applyFilter, getComparator } from "./user/utils";
 
 export default function Usermanagement() {
     const navigate = useNavigate();
-    const abortController = new AbortController();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -86,7 +85,7 @@ export default function Usermanagement() {
     async function handleSubmitNewGroup(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/group/new", { groupName: newGroupName }, abortController);
+        const response = await axiosPost("/group/new", { groupName: newGroupName });
 
         if (response.success) {
             //success new group
@@ -98,20 +97,22 @@ export default function Usermanagement() {
             switch (response.errorCode) {
                 case "ER_CHAR_INVALID": {
                     appDispatch({ type: "flashMessage", success: false, message: "Group Name cannot contain ',' commas" });
-                    return;
+                    break;
                 }
                 case "ER_DUP_ENTRY": {
                     appDispatch({ type: "flashMessage", success: false, message: "Group Name already exists" });
-                    return;
+                    break;
                 }
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
@@ -120,7 +121,7 @@ export default function Usermanagement() {
     async function handleSubmitNewUser(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") }, abortController);
+        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") });
 
         if (response.success) {
             //success new group
@@ -132,20 +133,22 @@ export default function Usermanagement() {
             switch (response.errorCode) {
                 case "ER_DUP_ENTRY": {
                     appDispatch({ type: "flashMessage", success: false, message: "Username already exists" });
-                    return;
+                    break;
                 }
                 case "ER_PW_INVALID": {
                     appDispatch({ type: "flashMessage", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
-                    return;
+                    break;
                 }
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
@@ -154,7 +157,7 @@ export default function Usermanagement() {
     const notFound = !dataFiltered.length && !!filterName;
 
     async function fetchGroupNames() {
-        const response = await axiosPost("/group/getGroups", {}, abortController);
+        const response = await axiosPost("/group/getGroups", {});
 
         if (response.success) {
             //success get groups
@@ -164,18 +167,20 @@ export default function Usermanagement() {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
     }
     async function fetchAllUsers() {
-        const response = await axiosPost("/user/getusers", {}, abortController);
+        const response = await axiosPost("/user/getusers", {});
 
         if (response.success) {
             //success get groups
@@ -184,12 +189,14 @@ export default function Usermanagement() {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
@@ -210,7 +217,6 @@ export default function Usermanagement() {
                 break;
             }
         }
-        return () => abortController.abort();
     }, [appState.loggedIn]);
 
     return (
@@ -272,7 +278,19 @@ export default function Usermanagement() {
                             <col width="10%" />
                             <col width="15%" />
                         </colgroup>
-                        <UserTableHead order={order} orderBy={orderBy} rowCount={allUsers.length} onRequestSort={handleSort} headLabel={[{ id: "name", label: "Name" }, { id: "password", label: "password" }, { id: "email", label: "Email" }, { id: "role", label: "Role" }, { id: "isActive", label: "active", align: "center" }, { id: "" }]} />
+                        <UserTableHead
+                            order={order}
+                            orderBy={orderBy}
+                            rowCount={allUsers.length}
+                            onRequestSort={handleSort}
+                            headLabel={[
+                                { id: "userId", label: "Name" },
+                                { id: "password", label: "password" },
+                                { id: "email", label: "Email" },
+                                { id: "userGroup", label: "Role" },
+                                { id: "isActive", label: "active", align: "center" },
+                            ]}
+                        />
                         <TableBody>
                             {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                                 <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup} status={row.isActive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} />

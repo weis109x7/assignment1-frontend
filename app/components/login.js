@@ -21,17 +21,17 @@ export default function Login() {
     const [userId, setUserId] = useImmer();
     const [password, setPassword] = useImmer();
     const [loginError, setLoginError] = useImmer(false);
-    const abortController = new AbortController();
 
     async function handleSubmit(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/login", { userId, password }, abortController);
+        const response = await axiosPost("/login", { userId, password });
         if (response.success) {
             //login
             appDispatch({ type: "login", user: response.user });
             appDispatch({ type: "flashMessage", success: true, message: "logged in sucessfully" });
         } else {
+            //post req fails?
             switch (response.errorCode) {
                 case "ER_INVALID_CREDEN": {
                     appDispatch({ type: "flashMessage", success: false, message: "Invalid Credentials" });
@@ -39,16 +39,18 @@ export default function Login() {
                     setTimeout(() => {
                         setLoginError(false);
                     }, 2000);
-                    return;
+                    break;
                 }
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
                     navigate("/");
-                    return;
+                    break;
                 }
                 default: {
                     console.log("uncaught error");
                     appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
                 }
             }
         }
