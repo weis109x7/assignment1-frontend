@@ -18,7 +18,7 @@ import { Check } from "@mui/icons-material";
 
 // ----------------------------------------------------------------------
 
-export default function UserTableRow({ userId, email, userGroup, status, password, fetchAllUsers, fetchGroupNames }) {
+export default function UserTableRow({ userId, email, userGroup, status, password, fetchAllUsers, fetchGroupNames, groupNameOptions }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -37,21 +37,18 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
         setIsActive(event.target.value);
     };
 
-    const handleMulti = (event) => {
-        if (event) setNewUserGroup(event.join(","));
-        else setNewUserGroup("");
-    };
-
     const cancelEdit = (event) => {
         setEditable(false);
-        setNewEmail(email);
+        setNewEmail(email ? email : "");
+        setNewUserGroup(userGroup);
         setNewPass("");
         setIsActive(status);
     };
 
     async function handleEditSubmit(e) {
         e.preventDefault();
-        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: newUserGroup, isActive });
+        const joinedUserGroup = newUserGroup ? newUserGroup.join(",") : "";
+        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: joinedUserGroup, isActive });
 
         if (response.success) {
             //success edit
@@ -61,7 +58,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
         } else {
             switch (response.errorCode) {
                 case "ER_CHAR_INVALID": {
-                    appDispatch({ type: "ER_PW_INVALID", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
+                    appDispatch({ type: "flashMessage", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
                     break;
                 }
                 case "ER_NOT_LOGIN": {
@@ -78,18 +75,17 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
         }
     }
 
-    if (userGroup) {
-        userGroup = userGroup.split(",").sort();
-    } else {
-        userGroup = undefined;
-    }
-
     useEffect(() => {
         if (editable) {
             fetchGroupNames();
             fetchAllUsers();
         }
     }, [editable]);
+
+    useEffect(() => {
+        setNewEmail(email ? email : "");
+        setNewUserGroup(userGroup);
+    }, [email, userGroup]);
 
     return (
         <>
@@ -102,18 +98,20 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
 
                 <TableCell>{editable ? <TextField value={newPass} onChange={(e) => setNewPass(e.target.value)} type="password" label="Password" variant="outlined" autoComplete="off" placeholder="password" /> : password}</TableCell>
 
-                <TableCell>{editable ? <TextField defaultValue={email} onChange={(e) => setNewEmail(e.target.value)} type="text" label="email" variant="outlined" autoComplete="off" placeholder="new email" /> : email}</TableCell>
+                <TableCell>{editable ? <TextField value={newEmail} onChange={(e) => setNewEmail(e.target.value)} type="text" label="email" variant="outlined" autoComplete="off" placeholder="new email" /> : email}</TableCell>
 
                 <TableCell>
                     {editable ? (
                         <Autocomplete
                             sx={{}}
-                            onChange={(e, newvalue) => handleMulti(newvalue)}
+                            onChange={(e, newvalue) => {
+                                setNewUserGroup(newvalue);
+                            }}
                             multiple
                             id="tags-standard"
-                            options={appState.groupNames}
+                            options={groupNameOptions}
                             getOptionLabel={(option) => option}
-                            defaultValue={userGroup}
+                            value={newUserGroup}
                             disableCloseOnSelect
                             renderOption={(props, option, { selected }) => (
                                 <MenuItem key={option} value={option} sx={{ justifyContent: "space-between" }} {...props}>

@@ -11,15 +11,7 @@ import { AppBar, Toolbar, Box } from "@mui/material";
 import HeaderLoggedIn from "./HeaderLoggedIn.js";
 
 export default function Header(props) {
-    const navigate = useNavigate();
     const appState = useContext(StateContext);
-
-    //redirect to login page when user is loggedout
-    useEffect(() => {
-        if (appState.loggedIn == false) {
-            navigate("/");
-        }
-    }, [appState.loggedIn]);
 
     return (
         <AppBar position="static" sx={{ background: "#49A3BA" }}>

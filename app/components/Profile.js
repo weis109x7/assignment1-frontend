@@ -15,7 +15,7 @@ export default function Profile() {
     const appState = useContext(StateContext);
 
     const [editable, setEditable] = useImmer(false);
-    const [email, setEmail] = useImmer(appState.user.email);
+    const [email, setEmail] = useImmer("");
     const [password, setPassword] = useImmer("");
 
     const [loginError, setLoginError] = useImmer(false);
@@ -23,7 +23,7 @@ export default function Profile() {
     //handle when edit is clicked, set fields to editable
     const handleEdit = (event) => {
         if (editable) {
-            setEmail(appState.user.email);
+            setEmail(currentUserObj.email);
             setPassword("");
         }
         setEditable((editable) => !editable);
@@ -37,7 +37,6 @@ export default function Profile() {
         //if success, update appstate with new email and flash message
         if (response.success) {
             appDispatch({ type: "flashMessage", success: true, message: "sucessfully updated own profile" });
-            appDispatch({ type: "updateUser", user: { email: email } });
             setEditable(false);
             setPassword("");
         } else {
@@ -63,10 +62,45 @@ export default function Profile() {
         }
     }
 
-    //keep email state updated
+    const [currentUserObj, setCurrentUserObj] = useImmer({
+        email: "",
+    });
+
+    // fetch latest user data
     useEffect(() => {
-        setEmail(appState.user.email);
-    }, [appState.user.email]);
+        async function fetchTokenValidity() {
+            const response = await axiosPost("/checktoken", {});
+            if (response.success) {
+                //login
+                appDispatch({ type: "login", user: response.user });
+                setCurrentUserObj({ email: response.user.email });
+            } else {
+                switch (response.errorCode) {
+                    //invalid jwt so force logout
+                    case "ER_JWT_INVALID": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                        break;
+                    }
+                    case "ER_NOT_LOGIN": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                        break;
+                    }
+                    default: {
+                        console.log("uncaught error");
+                        appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    }
+                }
+            }
+        }
+        fetchTokenValidity();
+    }, [editable]);
+
+    //run after usr has resumed session or is already logged in and ONLY if usr is admin
+    useEffect(() => {
+        if (currentUserObj.email) setEmail(currentUserObj.email);
+    }, [currentUserObj]);
 
     return (
         <>

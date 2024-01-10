@@ -31,13 +31,14 @@ export default function Usermanagement() {
     const [filterName, setFilterName] = useImmer("");
     const [rowsPerPage, setRowsPerPage] = useImmer(5);
 
-    const [allUsers, setAlUsers] = useImmer([]);
+    const [allUsers, setAllUsers] = useImmer([]);
     const [newGroupName, setNewGroupName] = useImmer("");
     const [newUsrObj, setNewUsrObj] = useImmer({
         username: "",
         password: "",
         email: "",
         userGroup: [],
+        isActive: "active",
     });
 
     const handleSort = (event, id) => {
@@ -75,12 +76,19 @@ export default function Usermanagement() {
         }));
     };
     const handleNewUsrInput = (e) => {
+        console.log(e);
         const { name, value } = e.target;
         setNewUsrObj((prevFormData) => ({
             ...prevFormData,
             [name]: value,
         }));
     };
+
+    const [currentUserObj, setCurrentUserObj] = useImmer({
+        userGroup: undefined,
+    });
+
+    const [groupNameOptions, setGroupNameOptions] = useImmer([]);
 
     async function handleSubmitNewGroup(e) {
         e.preventDefault();
@@ -97,7 +105,7 @@ export default function Usermanagement() {
         } else {
             switch (response.errorCode) {
                 case "ER_CHAR_INVALID": {
-                    appDispatch({ type: "flashMessage", success: false, message: "Group Name cannot contain ',' commas" });
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
                     break;
                 }
                 case "ER_DUP_ENTRY": {
@@ -121,13 +129,13 @@ export default function Usermanagement() {
     async function handleSubmitNewUser(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(",") });
+        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(","), isActive: newUsrObj.isActive });
 
         if (response.success) {
             //success new group
             appDispatch({ type: "flashMessage", success: true, message: response.message });
             //reset newUsr obj
-            setNewUsrObj({ username: "", password: "", email: "", userGroup: [] });
+            setNewUsrObj({ username: "", password: "", email: "", userGroup: [], isActive: "active" });
             //get fresh data
             fetchAllUsers();
             fetchGroupNames();
@@ -163,7 +171,7 @@ export default function Usermanagement() {
         if (response.success) {
             //success get groups
             let nameArr = response.message.map((a) => a.userGroup);
-            appDispatch({ type: "setGroupNames", data: nameArr });
+            setGroupNameOptions(nameArr);
         } else {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
@@ -187,7 +195,7 @@ export default function Usermanagement() {
 
         if (response.success) {
             //success get groups
-            setAlUsers(response.message);
+            setAllUsers(response.message);
         } else {
             switch (response.errorCode) {
                 case "ER_NOT_LOGIN": {
@@ -204,104 +212,148 @@ export default function Usermanagement() {
             }
         }
     }
+
     //run after usr has resumed session or is already logged in and ONLY if usr is admin
     useEffect(() => {
-        if (appState.user.userGroup.split(",").includes("admin")) {
-            fetchAllUsers();
-            fetchGroupNames();
-        } else {
-            //else throw them back to home and flash unauthorized
-            navigate("/");
-            appDispatch({ type: "flashMessage", success: false, message: "Unauthorized" });
+        if (currentUserObj.userGroup) {
+            if (currentUserObj["userGroup"].includes("admin")) {
+                fetchAllUsers();
+                fetchGroupNames();
+            } else {
+                //else throw them out
+                appDispatch({ type: "logout" });
+                appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+            }
         }
-    }, [appState.loggedIn]);
+    }, [currentUserObj]);
+
+    // fetch latest user data
+    useEffect(() => {
+        async function fetchTokenValidity() {
+            const response = await axiosPost("/checktoken", {});
+            if (response.success) {
+                //login
+                appDispatch({ type: "login", user: response.user });
+                setCurrentUserObj({ userGroup: response.user.userGroup });
+            } else {
+                switch (response.errorCode) {
+                    //invalid jwt so force logout
+                    case "ER_JWT_INVALID": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                        break;
+                    }
+                    case "ER_NOT_LOGIN": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                        break;
+                    }
+                    default: {
+                        console.log("uncaught error");
+                        appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    }
+                }
+            }
+        }
+        fetchTokenValidity();
+    }, []);
 
     return (
-        <Container sx={{ mt: 3 }}>
-            <Card>
-                <Stack direction="column" alignItems="flex-end" mt={3}>
-                    <form onSubmit={handleSubmitNewGroup}>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5} mr={3}>
-                            <TextField name="newGroupName" type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} label="New Group Name" variant="outlined" autoComplete="off" placeholder="Enter New Group Name" size="small" required />
-                            <Button variant="contained" type="submit" color="inherit">
-                                <Add />
-                            </Button>
-                        </Stack>
-                    </form>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
-                        <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
+        <>
+            {currentUserObj?.userGroup?.includes("admin") ? (
+                <Container sx={{ mt: 3 }}>
+                    <Card>
+                        <Stack direction="column" alignItems="flex-end" mt={3}>
+                            <form onSubmit={handleSubmitNewGroup}>
+                                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5} mr={3}>
+                                    <TextField name="newGroupName" type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} label="New Group Name" variant="outlined" autoComplete="off" placeholder="Enter New Group Name" size="small" required />
+                                    <Button variant="contained" type="submit" color="inherit">
+                                        <Add />
+                                    </Button>
+                                </Stack>
+                            </form>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
+                                <UserTableToolbar filterName={filterName} onFilterName={handleFilterByName} />
 
-                        <form onSubmit={handleSubmitNewUser}>
-                            <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="flex-end">
-                                <TextField name="username" type="text" value={newUsrObj.username} onChange={(e) => handleNewUsrInput(e)} label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" size="small" />
+                                <form onSubmit={handleSubmitNewUser}>
+                                    <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="flex-end">
+                                        <TextField name="username" type="text" value={newUsrObj.username} onChange={(e) => handleNewUsrInput(e)} label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" size="small" />
 
-                                <TextField name="password" type="password" value={newUsrObj.password} onChange={(e) => handleNewUsrInput(e)} label="Password" variant="outlined" required autoComplete="off" placeholder="Enter Password" size="small" />
+                                        <TextField name="password" type="password" value={newUsrObj.password} onChange={(e) => handleNewUsrInput(e)} label="Password" variant="outlined" required autoComplete="off" placeholder="Enter Password" size="small" />
 
-                                <TextField name="email" type="text" value={newUsrObj.email} onChange={(e) => handleNewUsrInput(e)} label="Email" variant="outlined" autoComplete="off" placeholder="Enter Email" size="small" />
+                                        <TextField name="email" type="text" value={newUsrObj.email} onChange={(e) => handleNewUsrInput(e)} label="Email" variant="outlined" autoComplete="off" placeholder="Enter Email" size="small" />
 
-                                <Autocomplete
-                                    sx={{}}
-                                    onChange={(e, newvalue) => handleMulti(newvalue)}
-                                    value={newUsrObj.userGroup}
-                                    multiple
-                                    id="tags-standard"
-                                    options={appState.groupNames}
-                                    getOptionLabel={(option) => option}
-                                    disableCloseOnSelect
-                                    renderOption={(props, option, { selected }) => (
-                                        <MenuItem key={option} value={option} sx={{ justifyContent: "space-between" }} {...props}>
-                                            {option}
-                                            {selected ? <Check color="info" /> : null}
-                                        </MenuItem>
-                                    )}
-                                    renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" size="small" sx={{ width: "300px" }} />}
-                                />
+                                        <Autocomplete
+                                            sx={{}}
+                                            onChange={(e, newvalue) => handleMulti(newvalue)}
+                                            value={newUsrObj.userGroup}
+                                            multiple
+                                            id="tags-standard"
+                                            options={groupNameOptions}
+                                            getOptionLabel={(option) => option}
+                                            disableCloseOnSelect
+                                            renderOption={(props, option, { selected }) => (
+                                                <MenuItem key={option} value={option} sx={{ justifyContent: "space-between" }} {...props}>
+                                                    {option}
+                                                    {selected ? <Check color="info" /> : null}
+                                                </MenuItem>
+                                            )}
+                                            renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" size="small" sx={{ width: "300px" }} />}
+                                        />
 
-                                <Button variant="contained" type="submit" color="inherit">
-                                    <Add />
-                                </Button>
+                                        <TextField name="isActive" value={newUsrObj.isActive} onChange={(e) => handleNewUsrInput(e)} select label="isActive" size="small" sx={{ width: "130px" }}>
+                                            <MenuItem value="active">active</MenuItem>
+                                            <MenuItem value="disabled">disabled</MenuItem>
+                                        </TextField>
+
+                                        <Button variant="contained" type="submit" color="inherit">
+                                            <Add />
+                                        </Button>
+                                    </Stack>
+                                </form>
                             </Stack>
-                        </form>
-                    </Stack>
-                </Stack>
+                        </Stack>
 
-                <TableContainer sx={{ overflow: "unset" }}>
-                    <Table sx={{ minWidth: 800 }}>
-                        <colgroup>
-                            <col width="12%" />
-                            <col width="15%" />
-                            <col width="23%" />
-                            <col width="25%" />
-                            <col width="10%" />
-                            <col width="15%" />
-                        </colgroup>
-                        <UserTableHead
-                            order={order}
-                            orderBy={orderBy}
-                            rowCount={allUsers.length}
-                            onRequestSort={handleSort}
-                            headLabel={[
-                                { id: "userId", label: "Name" },
-                                { id: "password", label: "password" },
-                                { id: "email", label: "Email" },
-                                { id: "userGroup", label: "Role" },
-                                { id: "isActive", label: "active", align: "center" },
-                            ]}
-                        />
-                        <TableBody>
-                            {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                                <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup} status={row.isActive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} />
-                            ))}
+                        <TableContainer sx={{ overflow: "unset" }}>
+                            <Table sx={{ minWidth: 800 }}>
+                                <colgroup>
+                                    <col width="12%" />
+                                    <col width="15%" />
+                                    <col width="23%" />
+                                    <col width="25%" />
+                                    <col width="10%" />
+                                    <col width="15%" />
+                                </colgroup>
+                                <UserTableHead
+                                    order={order}
+                                    orderBy={orderBy}
+                                    rowCount={allUsers.length}
+                                    onRequestSort={handleSort}
+                                    headLabel={[
+                                        { id: "userId", label: "Name" },
+                                        { id: "password", label: "password" },
+                                        { id: "email", label: "Email" },
+                                        { id: "userGroup", label: "Role" },
+                                        { id: "isActive", label: "active", align: "center" },
+                                    ]}
+                                />
+                                <TableBody>
+                                    {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                                        <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup ? row.userGroup.split(",").sort() : []} status={row.isActive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} groupNameOptions={groupNameOptions} />
+                                    ))}
+                                    <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allUsers.length)} />
 
-                            <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allUsers.length)} />
+                                    {notFound && <TableNoData query={filterName} />}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
 
-                            {notFound && <TableNoData query={filterName} />}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-
-                <TablePagination page={page} component="div" count={allUsers.length} rowsPerPage={rowsPerPage} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
-            </Card>
-        </Container>
+                        <TablePagination page={page} component="div" count={allUsers.length} rowsPerPage={rowsPerPage} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
+                    </Card>
+                </Container>
+            ) : (
+                <></>
+            )}
+        </>
     );
 }
