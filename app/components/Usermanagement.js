@@ -37,8 +37,8 @@ export default function Usermanagement() {
         username: "",
         password: "",
         email: "",
-        userGroup: [],
-        isActive: "active",
+        groupname: [],
+        isactive: "active",
     });
 
     const handleSort = (event, id) => {
@@ -72,7 +72,7 @@ export default function Usermanagement() {
     const handleMulti = (event) => {
         setNewUsrObj((prevFormData) => ({
             ...prevFormData,
-            userGroup: event,
+            groupname: event,
         }));
     };
     const handleNewUsrInput = (e) => {
@@ -85,7 +85,7 @@ export default function Usermanagement() {
     };
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
-        userGroup: undefined,
+        groupname: undefined,
     });
 
     const [groupNameOptions, setGroupNameOptions] = useImmer([]);
@@ -129,13 +129,13 @@ export default function Usermanagement() {
     async function handleSubmitNewUser(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/user/new", { userId: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, userGroup: newUsrObj.userGroup.join(","), isActive: newUsrObj.isActive });
+        const response = await axiosPost("/user/new", { username: newUsrObj.username, password: newUsrObj.password, email: newUsrObj.email, groupname: newUsrObj.groupname.join(","), isactive: newUsrObj.isactive });
 
         if (response.success) {
             //success new group
             appDispatch({ type: "flashMessage", success: true, message: response.message });
             //reset newUsr obj
-            setNewUsrObj({ username: "", password: "", email: "", userGroup: [], isActive: "active" });
+            setNewUsrObj({ username: "", password: "", email: "", groupname: [], isactive: "active" });
             //get fresh data
             fetchAllUsers();
             fetchGroupNames();
@@ -170,7 +170,7 @@ export default function Usermanagement() {
         const response = await axiosPost("/group/getGroups", {});
         if (response.success) {
             //success get groups
-            let nameArr = response.message.map((a) => a.userGroup);
+            let nameArr = response.message.map((a) => a.groupname);
             setGroupNameOptions(nameArr);
         } else {
             switch (response.errorCode) {
@@ -215,8 +215,8 @@ export default function Usermanagement() {
 
     //run after usr has resumed session or is already logged in and ONLY if usr is admin
     useEffect(() => {
-        if (currentUserObj.userGroup) {
-            if (currentUserObj["userGroup"].includes("admin")) {
+        if (currentUserObj.groupname) {
+            if (currentUserObj["groupname"].includes("admin")) {
                 fetchAllUsers();
                 fetchGroupNames();
             } else {
@@ -234,7 +234,7 @@ export default function Usermanagement() {
             if (response.success) {
                 //login
                 appDispatch({ type: "login", user: response.user });
-                setCurrentUserObj({ userGroup: response.user.userGroup });
+                setCurrentUserObj({ groupname: response.user.groupname });
             } else {
                 switch (response.errorCode) {
                     //invalid jwt so force logout
@@ -260,7 +260,7 @@ export default function Usermanagement() {
 
     return (
         <>
-            {currentUserObj?.userGroup?.includes("admin") ? (
+            {currentUserObj?.groupname?.includes("admin") ? (
                 <Container sx={{ mt: 3 }}>
                     <Card>
                         <Stack direction="column" alignItems="flex-end" mt={3}>
@@ -286,7 +286,7 @@ export default function Usermanagement() {
                                         <Autocomplete
                                             sx={{}}
                                             onChange={(e, newvalue) => handleMulti(newvalue)}
-                                            value={newUsrObj.userGroup}
+                                            value={newUsrObj.groupname}
                                             multiple
                                             id="tags-standard"
                                             options={groupNameOptions}
@@ -301,7 +301,7 @@ export default function Usermanagement() {
                                             renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" size="small" sx={{ width: "300px" }} />}
                                         />
 
-                                        <TextField name="isActive" value={newUsrObj.isActive} onChange={(e) => handleNewUsrInput(e)} select label="isActive" size="small" sx={{ width: "130px" }}>
+                                        <TextField name="isactive" value={newUsrObj.isactive} onChange={(e) => handleNewUsrInput(e)} select label="isactive" size="small" sx={{ width: "130px" }}>
                                             <MenuItem value="active">active</MenuItem>
                                             <MenuItem value="disabled">disabled</MenuItem>
                                         </TextField>
@@ -330,16 +330,16 @@ export default function Usermanagement() {
                                     rowCount={allUsers.length}
                                     onRequestSort={handleSort}
                                     headLabel={[
-                                        { id: "userId", label: "Name" },
+                                        { id: "username", label: "Name" },
                                         { id: "password", label: "password" },
                                         { id: "email", label: "Email" },
-                                        { id: "userGroup", label: "Role" },
-                                        { id: "isActive", label: "active", align: "center" },
+                                        { id: "groupname", label: "Role" },
+                                        { id: "isactive", label: "active", align: "center" },
                                     ]}
                                 />
                                 <TableBody>
                                     {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                                        <UserTableRow key={row.userId} password={"********"} userId={row.userId} email={row.email} userGroup={row.userGroup ? row.userGroup.split(",").sort() : []} status={row.isActive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} groupNameOptions={groupNameOptions} />
+                                        <UserTableRow key={row.username} password={"********"} username={row.username} email={row.email} groupname={row.groupname ? row.groupname.split(",").sort() : []} status={row.isactive} fetchAllUsers={fetchAllUsers} fetchGroupNames={fetchGroupNames} groupNameOptions={groupNameOptions} />
                                     ))}
                                     <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allUsers.length)} />
 

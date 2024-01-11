@@ -25,7 +25,7 @@ export default function Header(props) {
                 {appState.loggedIn ? (
                     <>
                         {/* if logged in, show logged in header and buttons else show nothing */}
-                        <h3>{appState.user.userId}</h3> <HeaderLoggedIn />
+                        <h3>{appState.user.username}</h3> <HeaderLoggedIn />
                     </>
                 ) : (
                     <></>

@@ -17,14 +17,14 @@ import { Grid, Container, Paper, TextField, Button } from "@mui/material";
 export default function Login() {
     const appDispatch = useContext(DispatchContext);
 
-    const [userId, setUserId] = useImmer();
+    const [username, setUsername] = useImmer();
     const [password, setPassword] = useImmer();
     const [loginError, setLoginError] = useImmer(false);
 
     async function handleSubmit(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/login", { userId, password });
+        const response = await axiosPost("/login", { username, password });
         if (response.success) {
             //login
             appDispatch({ type: "login", user: response.user });
@@ -68,7 +68,7 @@ export default function Login() {
                         <Paper elevation={20} style={{ padding: "20px" }}>
                             <form onSubmit={handleSubmit}>
                                 <div>
-                                    <TextField error={loginError} onChange={(e) => setUserId(e.target.value)} type="text" label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" sx={{ mb: 2 }} fullWidth />
+                                    <TextField error={loginError} onChange={(e) => setUsername(e.target.value)} type="text" label="Username" variant="outlined" required autoComplete="off" placeholder="Enter Username" sx={{ mb: 2 }} fullWidth />
                                 </div>
                                 <div>
                                     <TextField error={loginError} helperText={loginError ? "Invalid Credentials" : " "} onChange={(e) => setPassword(e.target.value)} type="password" label="Password" variant="outlined" required autoComplete="off" placeholder="Enter Password" sx={{ mb: 1 }} fullWidth />

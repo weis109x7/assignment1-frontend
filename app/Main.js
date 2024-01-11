@@ -32,7 +32,7 @@ function Main() {
     //init empty user state
     const initialState = {
         loggedIn: undefined,
-        user: { userId: "" },
+        user: { username: "" },
     };
 
     //show toast func
@@ -53,7 +53,7 @@ function Main() {
         switch (action.type) {
             case "login":
                 draft.loggedIn = true;
-                draft.user.userId = action.user.userId;
+                draft.user.username = action.user.username;
                 if (action.user.token) {
                     //set auth token in header
                     Axios.defaults.headers.common["Authorization"] = "Bearer " + action.user.token;

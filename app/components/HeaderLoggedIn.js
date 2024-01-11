@@ -24,7 +24,7 @@ export default function HeaderLoggedIn(props) {
     }
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
-        userGroup: [],
+        groupname: [],
     });
 
     // fetch latest user data
@@ -34,7 +34,7 @@ export default function HeaderLoggedIn(props) {
             if (response.success) {
                 //login
                 appDispatch({ type: "login", user: response.user });
-                setCurrentUserObj({ userGroup: response.user.userGroup });
+                setCurrentUserObj({ groupname: response.user.groupname });
             } else {
                 switch (response.errorCode) {
                     //invalid jwt so force logout
@@ -78,7 +78,7 @@ export default function HeaderLoggedIn(props) {
         <div>
             <ThemeProvider theme={theme}>
                 {/* show button only if user group contains admin */}
-                {currentUserObj["userGroup"].includes("admin") ? (
+                {currentUserObj["groupname"].includes("admin") ? (
                     // if user is on page then change color and disable button
                     <Button component={RouterLink} to="/usermanagement" variant="contained" disabled={location.pathname !== "/usermanagement" ? false : true}>
                         User Management

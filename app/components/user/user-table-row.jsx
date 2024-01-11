@@ -18,14 +18,14 @@ import { Check } from "@mui/icons-material";
 
 // ----------------------------------------------------------------------
 
-export default function UserTableRow({ userId, email, userGroup, status, password, fetchAllUsers, fetchGroupNames, groupNameOptions }) {
+export default function UserTableRow({ username, email, groupname, status, password, fetchAllUsers, fetchGroupNames, groupNameOptions }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
     const [editable, setEditable] = useImmer(false);
 
     const [newEmail, setNewEmail] = useImmer(email);
-    const [newUserGroup, setNewUserGroup] = useImmer(userGroup);
+    const [newUserGroup, setNewUserGroup] = useImmer(groupname);
     const [isActive, setIsActive] = useImmer(status);
     const [newPass, setNewPass] = useImmer("");
 
@@ -40,7 +40,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     const cancelEdit = (event) => {
         setEditable(false);
         setNewEmail(email ? email : "");
-        setNewUserGroup(userGroup);
+        setNewUserGroup(groupname);
         setNewPass("");
         setIsActive(status);
     };
@@ -48,7 +48,7 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
     async function handleEditSubmit(e) {
         e.preventDefault();
         const joinedUserGroup = newUserGroup ? newUserGroup.join(",") : "";
-        const response = await axiosPost("/user/edit", { userId, password: newPass, email: newEmail, userGroup: joinedUserGroup, isActive });
+        const response = await axiosPost("/user/edit", { username, password: newPass, email: newEmail, groupname: joinedUserGroup, isactive: isActive });
 
         if (response.success) {
             //success edit
@@ -84,15 +84,15 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
 
     useEffect(() => {
         setNewEmail(email ? email : "");
-        setNewUserGroup(userGroup);
-    }, [email, userGroup]);
+        setNewUserGroup(groupname);
+    }, [email, groupname]);
 
     return (
         <>
             <TableRow hover>
                 <TableCell component="th" scope="row" padding="none">
                     <Typography variant="subtitle2" noWrap>
-                        &nbsp;&nbsp;&nbsp;&nbsp; {userId}
+                        &nbsp;&nbsp;&nbsp;&nbsp; {username}
                     </Typography>
                 </TableCell>
 
@@ -121,14 +121,14 @@ export default function UserTableRow({ userId, email, userGroup, status, passwor
                             )}
                             renderInput={(params) => <TextField {...params} variant="outlined" label="Groups" placeholder="Group Names" />}
                         />
-                    ) : userGroup ? (
+                    ) : groupname ? (
                         <Stack direction="row" spacing={0.3}>
-                            {userGroup.map((name) => (
+                            {groupname.map((name) => (
                                 <Chip label={name} key={name} variant="outlined" />
                             ))}
                         </Stack>
                     ) : (
-                        userGroup
+                        groupname
                     )}
                 </TableCell>
 

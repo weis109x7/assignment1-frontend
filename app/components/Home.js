@@ -11,7 +11,7 @@ export default function Home() {
     const appState = useContext(StateContext);
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
-        userGroup: [],
+        groupname: [],
     });
 
     // fetch latest user data
@@ -21,7 +21,7 @@ export default function Home() {
             if (response.success) {
                 //login
                 appDispatch({ type: "login", user: response.user });
-                setCurrentUserObj({ userGroup: response.user.userGroup });
+                setCurrentUserObj({ groupname: response.user.groupname });
             } else {
                 switch (response.errorCode) {
                     //invalid jwt so force logout
