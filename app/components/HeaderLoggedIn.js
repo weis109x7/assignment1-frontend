@@ -1,6 +1,6 @@
 //react essentials
 import React, { useContext, useEffect } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 //appstate and dispatch
 import DispatchContext from "../DispatchContext.js";
@@ -78,15 +78,13 @@ export default function HeaderLoggedIn(props) {
         <div>
             <ThemeProvider theme={theme}>
                 {/* show button only if user group contains admin */}
-                {currentUserObj["groupname"].includes("admin") ? (
+                {currentUserObj["groupname"].includes("admin") && (
                     // if user is on page then change color and disable button
-                    <Button component={RouterLink} to="/usermanagement" variant="contained" disabled={location.pathname !== "/usermanagement" ? false : true}>
+                    <Button component={Link} to="/usermanagement" variant="contained" disabled={location.pathname !== "/usermanagement" ? false : true}>
                         User Management
                     </Button>
-                ) : (
-                    <></>
                 )}
-                <Button component={RouterLink} to="/myprofile" variant="contained" disabled={location.pathname !== "/myprofile" ? false : true} sx={{ ml: 1 }}>
+                <Button component={Link} to="/myprofile" variant="contained" disabled={location.pathname !== "/myprofile" ? false : true} sx={{ ml: 1 }}>
                     My Profile
                 </Button>
             </ThemeProvider>

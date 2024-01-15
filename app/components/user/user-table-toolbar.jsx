@@ -15,7 +15,7 @@ export default function UserTableToolbar({ filterName, onFilterName }) {
                 justifyContent: "space-between",
             }}
         >
-            <OutlinedInput value={filterName} onChange={onFilterName} placeholder="Search user..." size="small" />
+            <OutlinedInput value={filterName} onChange={onFilterName} placeholder="Search..." size="small" />
         </Toolbar>
     );
 }

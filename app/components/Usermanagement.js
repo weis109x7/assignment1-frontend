@@ -27,7 +27,7 @@ export default function Usermanagement() {
 
     const [page, setPage] = useImmer(0);
     const [order, setOrder] = useImmer("asc");
-    const [orderBy, setOrderBy] = useImmer("name");
+    const [orderBy, setOrderBy] = useImmer("username");
     const [filterName, setFilterName] = useImmer("");
     const [rowsPerPage, setRowsPerPage] = useImmer(5);
 
@@ -66,8 +66,11 @@ export default function Usermanagement() {
     var dataFiltered = applyFilter({
         inputData: allUsers,
         comparator: getComparator(order, orderBy),
-        filterName,
+        filterInput: filterName,
+        filterColumn: "username",
     });
+
+    const notFound = !dataFiltered.length && !!filterName;
 
     const handleMulti = (event) => {
         setNewUsrObj((prevFormData) => ({
@@ -146,7 +149,7 @@ export default function Usermanagement() {
                     break;
                 }
                 case "ER_PW_INVALID": {
-                    appDispatch({ type: "flashMessage", success: false, message: "password needs to be 8-10char and contains alphanumeric and specialcharacter" });
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
                     break;
                 }
                 case "ER_NOT_LOGIN": {
@@ -162,8 +165,6 @@ export default function Usermanagement() {
             }
         }
     }
-
-    const notFound = !dataFiltered.length && !!filterName;
 
     //func to grab groupNames
     async function fetchGroupNames() {
@@ -260,7 +261,7 @@ export default function Usermanagement() {
 
     return (
         <>
-            {currentUserObj?.groupname?.includes("admin") ? (
+            {currentUserObj?.groupname?.includes("admin") && (
                 <Container sx={{ mt: 3 }}>
                     <Card>
                         <Stack direction="column" alignItems="flex-end" mt={3}>
@@ -351,8 +352,6 @@ export default function Usermanagement() {
                         <TablePagination page={page} component="div" count={allUsers.length} rowsPerPage={rowsPerPage} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
                     </Card>
                 </Container>
-            ) : (
-                <></>
             )}
         </>
     );
