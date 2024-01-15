@@ -8,6 +8,7 @@ import { axiosPost } from "../axiosPost.js";
 
 import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField } from "@mui/material";
 import { Check, Add } from "@mui/icons-material";
+import Modal from "@mui/material/Modal";
 
 import TableNoData from "./user/table-no-data.jsx";
 import AppTableRow from "./user/app-table-row.jsx";
@@ -16,6 +17,7 @@ import TableEmptyRows from "./user/table-empty-rows.jsx";
 import UserTableToolbar from "./user/user-table-toolbar.jsx";
 
 import { emptyRows, applyFilter, getComparator } from "./user/utils";
+import CreateApp from "./CreateApp.js";
 
 export default function Home() {
     const appDispatch = useContext(DispatchContext);
@@ -25,6 +27,13 @@ export default function Home() {
         groupname: undefined,
     });
     const [allApps, setAllApps] = useImmer([]);
+
+    const [open, setOpen] = useImmer(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => {
+        fetchAllApps();
+        setOpen(false);
+    };
 
     //table management stuffs
     const [page, setPage] = useImmer(0);
@@ -133,12 +142,18 @@ export default function Home() {
                     <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
                         <UserTableToolbar filterName={filterInput} onFilterName={handleFilterByInput} />
                         {currentUserObj?.groupname?.includes("projectlead") && (
-                            <Button variant="contained" color="inherit">
+                            <Button onClick={handleOpen} variant="contained" color="inherit">
                                 New App
                                 <Add />
                             </Button>
                         )}
                     </Stack>
+
+                    <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+                        <>
+                            <CreateApp />
+                        </>
+                    </Modal>
 
                     <TableContainer sx={{ overflow: "unset" }}>
                         <Table sx={{ minWidth: 800 }}>

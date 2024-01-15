@@ -27,6 +27,7 @@ import Usermanagement from "./components/Usermanagement.js";
 import Profile from "./components/Profile.js";
 import Loading from "./components/Loading.js";
 import RedirectHandler from "./components/RedirectHandler.js";
+import CreateApp from "./components/CreateApp.js";
 
 function Main() {
     //init empty user state
@@ -125,14 +126,23 @@ function Main() {
                             <Loading />
                         ) : (
                             <RedirectHandler>
-                                {/* {state.loggedIn ? <Header /> : <></>} */}
                                 <Header />
-                                <Routes>
-                                    <Route path="/" element={state.loggedIn ? <Home /> : <Login />} />
-                                    <Route path="usermanagement" element={state.loggedIn ? <Usermanagement /> : <></>} />
-                                    <Route path="myprofile" element={state.loggedIn ? <Profile /> : <></>} />
-                                    <Route path="*" element={<NotFound />} />
-                                </Routes>
+                                {state.loggedIn ? (
+                                    <Routes>
+                                        <Route path="/" element={<Home />} />
+                                        <Route path="app" element={<Home />} />
+                                        <Route path="app/:appName" element={<></>} />
+                                        <Route path="app/:appName/kanban" element={<></>} />
+                                        <Route path="app/:appName/kanban/createtask" element={<></>} />
+                                        <Route path="app/:appName/kanban/:taskid" element={<></>} />
+
+                                        <Route path="usermanagement" element={<Usermanagement />} />
+                                        <Route path="myprofile" element={<Profile />} />
+                                        <Route path="*" element={<NotFound />} />
+                                    </Routes>
+                                ) : (
+                                    <Login />
+                                )}
                             </RedirectHandler>
                         )}
                     </BrowserRouter>
