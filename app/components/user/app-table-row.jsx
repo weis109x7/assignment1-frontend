@@ -19,12 +19,19 @@ import { Autocomplete } from "@mui/material";
 import { Check } from "@mui/icons-material";
 
 import { Button } from "@mui/material";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 
 // ----------------------------------------------------------------------
 
-export default function AppTableRow({ app_acronym, app_startdate, app_enddate, app_permit_create, app_permit_open, app_permit_todolist, app_permit_doing, app_permit_done }) {
+export default function AppTableRow({ app_acronym, app_startdate, app_enddate, app_permit_create, app_permit_open, app_permit_todolist, app_permit_doing, app_permit_done, setViewingApp, handleOpen }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
+
+    dayjs.extend(localizedFormat);
+
+    app_startdate = dayjs.unix(app_startdate).format("ll");
+    app_enddate = dayjs.unix(app_enddate).format("ll");
 
     return (
         <>
@@ -51,14 +58,18 @@ export default function AppTableRow({ app_acronym, app_startdate, app_enddate, a
 
                 <TableCell align="right">
                     <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5}>
-                        <Button component={Link} to="/" variant="outlined" size="small">
+                        <Button
+                            onClick={() => {
+                                setViewingApp(app_acronym);
+                                handleOpen();
+                            }}
+                            variant="outlined"
+                            size="small"
+                        >
                             View
                         </Button>
                         <Button component={Link} to="/" variant="contained" size="small">
-                            Plans
-                        </Button>
-                        <Button component={Link} to="/" variant="contained" size="small">
-                            Tasks
+                            Kanban
                         </Button>
                     </Stack>
                 </TableCell>

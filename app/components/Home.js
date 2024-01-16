@@ -6,7 +6,7 @@ import StateContext from "../StateContext.js";
 import { useImmer } from "use-immer";
 import { axiosPost } from "../axiosPost.js";
 
-import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField } from "@mui/material";
+import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField, Box } from "@mui/material";
 import { Check, Add } from "@mui/icons-material";
 import Modal from "@mui/material/Modal";
 
@@ -18,6 +18,18 @@ import UserTableToolbar from "./user/user-table-toolbar.jsx";
 
 import { emptyRows, applyFilter, getComparator } from "./user/utils";
 import CreateApp from "./CreateApp.js";
+import ViewApp from "./ViewApp.js";
+
+const style = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 600,
+    bgcolor: "background.paper",
+    boxShadow: 24,
+    p: 4,
+};
 
 export default function Home() {
     const appDispatch = useContext(DispatchContext);
@@ -33,7 +45,10 @@ export default function Home() {
     const handleClose = () => {
         fetchAllApps();
         setOpen(false);
+        setViewingApp(false);
     };
+
+    const [viewingApp, setViewingApp] = useImmer(false);
 
     //table management stuffs
     const [page, setPage] = useImmer(0);
@@ -130,13 +145,16 @@ export default function Home() {
 
     //run after getting fresh user state
     useEffect(() => {
-        if (appState.loggedIn) {
+        if (currentUserObj.groupname) {
             fetchAllApps();
         }
-    }, [appState]);
+    }, [currentUserObj]);
 
     return (
         <>
+            <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+                <Box sx={style}>{viewingApp ? <ViewApp viewingApp={viewingApp} setViewingApp={setViewingApp} handleClose={handleClose}></ViewApp> : <CreateApp handleClose={handleClose} />}</Box>
+            </Modal>
             <Container sx={{ mt: 3 }}>
                 <Card>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
@@ -148,12 +166,6 @@ export default function Home() {
                             </Button>
                         )}
                     </Stack>
-
-                    <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
-                        <>
-                            <CreateApp />
-                        </>
-                    </Modal>
 
                     <TableContainer sx={{ overflow: "unset" }}>
                         <Table sx={{ minWidth: 800 }}>
@@ -186,15 +198,13 @@ export default function Home() {
                             />
                             <TableBody>
                                 {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                                    <AppTableRow key={row.app_acronym} app_acronym={row.app_acronym} app_startdate={row.app_startdate} app_enddate={row.app_enddate} app_permit_create={row.app_permit_create} app_permit_open={row.app_permit_open} app_permit_todolist={row.app_permit_todolist} app_permit_doing={row.app_permit_doing} app_permit_done={row.app_permit_done} />
+                                    <AppTableRow key={row.app_acronym} app_acronym={row.app_acronym} app_startdate={row.app_startdate} app_enddate={row.app_enddate} app_permit_create={row.app_permit_create} app_permit_open={row.app_permit_open} app_permit_todolist={row.app_permit_todolist} app_permit_doing={row.app_permit_doing} app_permit_done={row.app_permit_done} setViewingApp={setViewingApp} handleOpen={handleOpen} />
                                 ))}
                                 <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allApps.length)} />
-
                                 {notFound && <TableNoData query={filterInput} />}
                             </TableBody>
                         </Table>
                     </TableContainer>
-
                     <TablePagination page={page} component="div" count={allApps.length} rowsPerPage={rowsPerPage} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
                 </Card>
             </Container>

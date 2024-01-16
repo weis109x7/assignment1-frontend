@@ -27,7 +27,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 
 import dayjs from "dayjs";
 
-export default function CreateApp(props) {
+export default function ViewApp(props) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -36,6 +36,16 @@ export default function CreateApp(props) {
     });
 
     const [groupNameOptions, setGroupNameOptions] = useImmer([]);
+
+    const [editable, setEditable] = useImmer(false);
+
+    //handle when edit is clicked, set fields to editable
+    const handleEdit = (event) => {
+        if (editable) {
+            console.log("setfields to editable");
+        }
+        setEditable((editable) => !editable);
+    };
 
     const [newAppObj, setNewAppObj] = useImmer({
         app_acronym: "",
@@ -108,6 +118,35 @@ export default function CreateApp(props) {
             }
         }
     }
+    //func to grab groupNames
+    async function fetchGroupNames() {
+        const response = await axiosPost("/group/getGroups", {});
+        if (response.success) {
+            //success get groups
+            let nameArr = response.message.map((a) => a.groupname);
+            setGroupNameOptions(nameArr);
+        } else {
+            switch (response.errorCode) {
+                case "ER_NOT_LOGIN": {
+                    //unauthorized
+                    appDispatch({ type: "logout" });
+                    // appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
+                    break;
+                }
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    break;
+                }
+            }
+        }
+    }
+
+    useEffect(() => {
+        if (editable) {
+            fetchGroupNames();
+        }
+    }, [editable]);
 
     // fetch latest user data
     useEffect(() => {
@@ -137,31 +176,7 @@ export default function CreateApp(props) {
                 }
             }
         }
-        //func to grab groupNames
-        async function fetchGroupNames() {
-            const response = await axiosPost("/group/getGroups", {});
-            if (response.success) {
-                //success get groups
-                let nameArr = response.message.map((a) => a.groupname);
-                setGroupNameOptions(nameArr);
-            } else {
-                switch (response.errorCode) {
-                    case "ER_NOT_LOGIN": {
-                        //unauthorized
-                        appDispatch({ type: "logout" });
-                        // appDispatch({ type: "flashMessage", success: false, message: "Please login again!" });
-                        break;
-                    }
-                    default: {
-                        console.log("uncaught error");
-                        appDispatch({ type: "flashMessage", success: false, message: response.message });
-                        break;
-                    }
-                }
-            }
-        }
         fetchTokenValidity();
-        fetchGroupNames();
     }, []);
 
     return (
@@ -170,24 +185,24 @@ export default function CreateApp(props) {
                 <Grid container spacing={1} justifyContent="space-evenly">
                     <Grid item xs={6}>
                         <Grid container spacing={1} justifyContent="space-evenly">
-                            <h2>Create Application</h2>
+                            <h2>Viewing {props.viewingApp}</h2>
                             <Grid item xs={12}>
-                                <TextField size="small" name="app_acronym" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_acronym} fullWidth label="App Name" variant="outlined" required autoComplete="off" />
+                                <TextField size="small" disabled name="app_acronym" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_acronym} fullWidth label="App Name" variant="outlined" required autoComplete="off" />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField size="small" name="app_description" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_description} fullWidth label="Description" variant="outlined" multiline minRows={3} maxRows={3} autoComplete="off" />
+                                <TextField size="small" disabled={!editable} name="app_description" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_description} fullWidth label="Description" variant="outlined" multiline minRows={3} maxRows={3} autoComplete="off" />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField name="app_rnumber" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_rnumber} size="small" fullWidth label="R number" variant="outlined" type="number" InputProps={{ inputProps: { min: 0, max: 100000 } }} required />
+                                <TextField name="app_rnumber" disabled onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_rnumber} size="small" fullWidth label="R number" variant="outlined" type="number" InputProps={{ inputProps: { min: 0, max: 100000 } }} required />
                             </Grid>
                             <Grid item xs={12}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker label="Start-date" name="app_startdate" onChange={(e) => handleNewAppDateInput(e, "app_startdate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_startdate } }} />
+                                    <DatePicker label="Start-date" name="app_startdate" disabled={!editable} onChange={(e) => handleNewAppDateInput(e, "app_startdate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_startdate } }} />
                                 </LocalizationProvider>
                             </Grid>
                             <Grid item xs={12}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker label="End-date" name="app_enddate" onChange={(e) => handleNewAppDateInput(e, "app_enddate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_enddate } }} />
+                                    <DatePicker label="End-date" name="app_enddate" disabled={!editable} onChange={(e) => handleNewAppDateInput(e, "app_enddate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_enddate } }} />
                                 </LocalizationProvider>
                             </Grid>
                         </Grid>
@@ -195,9 +210,9 @@ export default function CreateApp(props) {
 
                     <Grid item xs={6}>
                         <Grid container spacing={1} justifyContent="space-evenly">
-                            <h2>app permissions</h2>
+                            <h2>{props.viewingApp} permissions</h2>
                             <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit create" variant="outlined" select required value={newAppObj.app_permit_create} name="app_permit_create" onChange={(e) => handleNewAppInput(e)}>
+                                <TextField size="small" fullWidth label="Permit create" disabled={!editable} variant="outlined" select required value={newAppObj.app_permit_create} name="app_permit_create" onChange={(e) => handleNewAppInput(e)}>
                                     {groupNameOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
@@ -207,7 +222,7 @@ export default function CreateApp(props) {
                             </Grid>
 
                             <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit open" variant="outlined" select required value={newAppObj.app_permit_open} name="app_permit_open" onChange={(e) => handleNewAppInput(e)}>
+                                <TextField size="small" fullWidth label="Permit open" disabled={!editable} variant="outlined" select required value={newAppObj.app_permit_open} name="app_permit_open" onChange={(e) => handleNewAppInput(e)}>
                                     {groupNameOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
@@ -217,7 +232,7 @@ export default function CreateApp(props) {
                             </Grid>
 
                             <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit todo" variant="outlined" select required value={newAppObj.app_permit_todolist} name="app_permit_todolist" onChange={(e) => handleNewAppInput(e)}>
+                                <TextField size="small" fullWidth label="Permit todo" disabled={!editable} variant="outlined" select required value={newAppObj.app_permit_todolist} name="app_permit_todolist" onChange={(e) => handleNewAppInput(e)}>
                                     {groupNameOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
@@ -227,7 +242,7 @@ export default function CreateApp(props) {
                             </Grid>
 
                             <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit doing" variant="outlined" select required value={newAppObj.app_permit_doing} name="app_permit_doing" onChange={(e) => handleNewAppInput(e)}>
+                                <TextField size="small" fullWidth label="Permit doing" disabled={!editable} variant="outlined" select required value={newAppObj.app_permit_doing} name="app_permit_doing" onChange={(e) => handleNewAppInput(e)}>
                                     {groupNameOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
@@ -237,7 +252,7 @@ export default function CreateApp(props) {
                             </Grid>
 
                             <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit done" variant="outlined" select required value={newAppObj.app_permit_done} name="app_permit_done" onChange={(e) => handleNewAppInput(e)}>
+                                <TextField size="small" fullWidth label="Permit done" disabled={!editable} variant="outlined" select required value={newAppObj.app_permit_done} name="app_permit_done" onChange={(e) => handleNewAppInput(e)}>
                                     {groupNameOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
@@ -253,9 +268,22 @@ export default function CreateApp(props) {
                             <Button variant="contained" onClick={props.handleClose}>
                                 Back to Apps
                             </Button>
-                            <Button variant="contained" type="submit">
-                                New App
-                            </Button>
+
+                            {currentUserObj?.groupname?.includes("projectlead") &&
+                                (editable ? (
+                                    <>
+                                        <Button variant="outlined" onClick={handleEdit}>
+                                            cancel
+                                        </Button>
+                                        <Button variant="outlined" type="submit">
+                                            Save
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button variant="outlined" onClick={handleEdit}>
+                                        edit
+                                    </Button>
+                                ))}
                         </Stack>
                     </Grid>
                 </Grid>

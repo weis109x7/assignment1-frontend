@@ -24,7 +24,7 @@ export default function HeaderLoggedIn(props) {
     }
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
-        groupname: [],
+        groupname: undefined,
     });
 
     // fetch latest user data
@@ -78,7 +78,7 @@ export default function HeaderLoggedIn(props) {
         <div>
             <ThemeProvider theme={theme}>
                 {/* show button only if user group contains admin */}
-                {currentUserObj["groupname"].includes("admin") && (
+                {currentUserObj?.groupname?.includes("admin") && (
                     // if user is on page then change color and disable button
                     <Button component={Link} to="/usermanagement" variant="contained" disabled={location.pathname !== "/usermanagement" ? false : true}>
                         User Management
