@@ -28,6 +28,7 @@ import Profile from "./components/Profile.js";
 import Loading from "./components/Loading.js";
 import RedirectHandler from "./components/RedirectHandler.js";
 import CreateApp from "./components/CreateApp.js";
+import Kanban from "./components/Kanban.js";
 
 function Main() {
     //init empty user state
@@ -129,16 +130,30 @@ function Main() {
                                 <Header />
                                 {state.loggedIn ? (
                                     <Routes>
-                                        <Route path="/" element={<Home />} />
-                                        <Route path="app" element={<Home />} />
-                                        <Route path="app/:appName" element={<></>} />
-                                        <Route path="app/:appName/kanban" element={<></>} />
-                                        <Route path="app/:appName/kanban/createtask" element={<></>} />
-                                        <Route path="app/:appName/kanban/:taskid" element={<></>} />
-
-                                        <Route path="usermanagement" element={<Usermanagement />} />
-                                        <Route path="myprofile" element={<Profile />} />
-                                        <Route path="*" element={<NotFound />} />
+                                        <Route
+                                            path="/"
+                                            element={<Home />}
+                                        />
+                                        <Route
+                                            path="app"
+                                            element={<Home />}
+                                        />
+                                        <Route
+                                            path="app/:appName"
+                                            element={<Kanban></Kanban>}
+                                        />
+                                        <Route
+                                            path="usermanagement"
+                                            element={<Usermanagement />}
+                                        />
+                                        <Route
+                                            path="myprofile"
+                                            element={<Profile />}
+                                        />
+                                        <Route
+                                            path="*"
+                                            element={<NotFound />}
+                                        />
                                     </Routes>
                                 ) : (
                                     <Login />

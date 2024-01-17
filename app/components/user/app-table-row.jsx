@@ -36,8 +36,15 @@ export default function AppTableRow({ app_acronym, app_startdate, app_enddate, a
     return (
         <>
             <TableRow hover>
-                <TableCell component="th" scope="row" padding="none">
-                    <Typography variant="subtitle2" noWrap>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    padding="none"
+                >
+                    <Typography
+                        variant="subtitle2"
+                        noWrap
+                    >
                         &nbsp;&nbsp;&nbsp;&nbsp; {app_acronym}
                     </Typography>
                 </TableCell>
@@ -57,7 +64,12 @@ export default function AppTableRow({ app_acronym, app_startdate, app_enddate, a
                 <TableCell align="center">{app_permit_done}</TableCell>
 
                 <TableCell align="right">
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={0.5}>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={0.5}
+                    >
                         <Button
                             onClick={() => {
                                 setViewingApp(app_acronym);
@@ -68,7 +80,12 @@ export default function AppTableRow({ app_acronym, app_startdate, app_enddate, a
                         >
                             View
                         </Button>
-                        <Button component={Link} to="/" variant="contained" size="small">
+                        <Button
+                            component={Link}
+                            to={"/app/" + app_acronym}
+                            variant="contained"
+                            size="small"
+                        >
                             Kanban
                         </Button>
                     </Stack>

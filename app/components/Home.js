@@ -152,15 +152,43 @@ export default function Home() {
 
     return (
         <>
-            <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
-                <Box sx={style}>{viewingApp ? <ViewApp viewingApp={viewingApp} setViewingApp={setViewingApp} handleClose={handleClose}></ViewApp> : <CreateApp handleClose={handleClose} />}</Box>
+            <Modal
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={style}>
+                    {viewingApp ? (
+                        <ViewApp
+                            viewingApp={viewingApp}
+                            setViewingApp={setViewingApp}
+                            handleClose={handleClose}
+                        ></ViewApp>
+                    ) : (
+                        <CreateApp handleClose={handleClose} />
+                    )}
+                </Box>
             </Modal>
             <Container sx={{ mt: 3 }}>
                 <Card>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} mr={3}>
-                        <UserTableToolbar filterName={filterInput} onFilterName={handleFilterByInput} />
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        mb={1}
+                        mr={3}
+                    >
+                        <UserTableToolbar
+                            filterName={filterInput}
+                            onFilterName={handleFilterByInput}
+                        />
                         {currentUserObj?.groupname?.includes("projectlead") && (
-                            <Button onClick={handleOpen} variant="contained" color="inherit">
+                            <Button
+                                onClick={handleOpen}
+                                variant="contained"
+                                color="inherit"
+                            >
                                 New App
                                 <Add />
                             </Button>
@@ -198,14 +226,37 @@ export default function Home() {
                             />
                             <TableBody>
                                 {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                                    <AppTableRow key={row.app_acronym} app_acronym={row.app_acronym} app_startdate={row.app_startdate} app_enddate={row.app_enddate} app_permit_create={row.app_permit_create} app_permit_open={row.app_permit_open} app_permit_todolist={row.app_permit_todolist} app_permit_doing={row.app_permit_doing} app_permit_done={row.app_permit_done} setViewingApp={setViewingApp} handleOpen={handleOpen} />
+                                    <AppTableRow
+                                        key={row.app_acronym}
+                                        app_acronym={row.app_acronym}
+                                        app_startdate={row.app_startdate}
+                                        app_enddate={row.app_enddate}
+                                        app_permit_create={row.app_permit_create}
+                                        app_permit_open={row.app_permit_open}
+                                        app_permit_todolist={row.app_permit_todolist}
+                                        app_permit_doing={row.app_permit_doing}
+                                        app_permit_done={row.app_permit_done}
+                                        setViewingApp={setViewingApp}
+                                        handleOpen={handleOpen}
+                                    />
                                 ))}
-                                <TableEmptyRows height={77} emptyRows={emptyRows(page, rowsPerPage, allApps.length)} />
+                                <TableEmptyRows
+                                    height={77}
+                                    emptyRows={emptyRows(page, rowsPerPage, allApps.length)}
+                                />
                                 {notFound && <TableNoData query={filterInput} />}
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    <TablePagination page={page} component="div" count={allApps.length} rowsPerPage={rowsPerPage} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
+                    <TablePagination
+                        page={page}
+                        component="div"
+                        count={allApps.length}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={handleChangePage}
+                        rowsPerPageOptions={[5, 10, 25]}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
                 </Card>
             </Container>
         </>

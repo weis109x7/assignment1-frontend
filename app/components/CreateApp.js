@@ -59,7 +59,7 @@ export default function CreateApp(props) {
         }));
     };
 
-    const handleNewAppDateInput = (value, name) => {
+    const handleEditAppValueNameInput = (value, name) => {
         setNewAppObj((prevFormData) => ({
             ...prevFormData,
             [name]: value,
@@ -167,93 +167,243 @@ export default function CreateApp(props) {
     return (
         <>
             <form onSubmit={handleSubmitnewApp}>
-                <Grid container spacing={1} justifyContent="space-evenly">
-                    <Grid item xs={6}>
-                        <Grid container spacing={1} justifyContent="space-evenly">
+                <Grid
+                    container
+                    spacing={1}
+                    justifyContent="space-evenly"
+                >
+                    <Grid
+                        item
+                        xs={6}
+                    >
+                        <Grid
+                            container
+                            spacing={1}
+                            justifyContent="space-evenly"
+                        >
                             <h2>Create Application</h2>
-                            <Grid item xs={12}>
-                                <TextField size="small" name="app_acronym" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_acronym} fullWidth label="App Name" variant="outlined" required autoComplete="off" />
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <TextField
+                                    size="small"
+                                    name="app_acronym"
+                                    onChange={(e) => handleNewAppInput(e)}
+                                    value={newAppObj.app_acronym}
+                                    fullWidth
+                                    label="App Name"
+                                    variant="outlined"
+                                    required
+                                    autoComplete="off"
+                                />
                             </Grid>
-                            <Grid item xs={12}>
-                                <TextField size="small" name="app_description" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_description} fullWidth label="Description" variant="outlined" multiline minRows={3} maxRows={3} autoComplete="off" />
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <TextField
+                                    size="small"
+                                    name="app_description"
+                                    onChange={(e) => handleNewAppInput(e)}
+                                    value={newAppObj.app_description}
+                                    fullWidth
+                                    label="Description"
+                                    variant="outlined"
+                                    multiline
+                                    minRows={3}
+                                    maxRows={3}
+                                    autoComplete="off"
+                                />
                             </Grid>
-                            <Grid item xs={12}>
-                                <TextField name="app_rnumber" onChange={(e) => handleNewAppInput(e)} value={newAppObj.app_rnumber} size="small" fullWidth label="R number" variant="outlined" type="number" InputProps={{ inputProps: { min: 0, max: 100000 } }} required />
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <TextField
+                                    name="app_rnumber"
+                                    onChange={(e) => handleNewAppInput(e)}
+                                    value={newAppObj.app_rnumber}
+                                    size="small"
+                                    fullWidth
+                                    label="R number"
+                                    variant="outlined"
+                                    type="number"
+                                    InputProps={{ inputProps: { min: 0, max: 100000 } }}
+                                    required
+                                />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid
+                                item
+                                xs={12}
+                            >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker label="Start-date" name="app_startdate" onChange={(e) => handleNewAppDateInput(e, "app_startdate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_startdate } }} />
+                                    <DatePicker
+                                        label="Start-date"
+                                        name="app_startdate"
+                                        onChange={(e) => handleEditAppValueNameInput(e, "app_startdate")}
+                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_startdate } }}
+                                    />
                                 </LocalizationProvider>
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid
+                                item
+                                xs={12}
+                            >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker label="End-date" name="app_enddate" onChange={(e) => handleNewAppDateInput(e, "app_enddate")} slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_enddate } }} />
+                                    <DatePicker
+                                        label="End-date"
+                                        name="app_enddate"
+                                        onChange={(e) => handleEditAppValueNameInput(e, "app_enddate")}
+                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_enddate } }}
+                                    />
                                 </LocalizationProvider>
                             </Grid>
                         </Grid>
                     </Grid>
 
-                    <Grid item xs={6}>
-                        <Grid container spacing={1} justifyContent="space-evenly">
+                    <Grid
+                        item
+                        xs={6}
+                    >
+                        <Grid
+                            container
+                            spacing={1}
+                            justifyContent="space-evenly"
+                        >
                             <h2>app permissions</h2>
-                            <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit create" variant="outlined" select required value={newAppObj.app_permit_create} name="app_permit_create" onChange={(e) => handleNewAppInput(e)}>
-                                    {groupNameOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <Autocomplete
+                                    size="small"
+                                    options={groupNameOptions}
+                                    variant="outlined"
+                                    value={newAppObj.app_permit_create}
+                                    onChange={(event, newValue) => {
+                                        handleEditAppValueNameInput(newValue, "app_permit_create");
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="Permit create"
+                                        />
+                                    )}
+                                />
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit open" variant="outlined" select required value={newAppObj.app_permit_open} name="app_permit_open" onChange={(e) => handleNewAppInput(e)}>
-                                    {groupNameOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <Autocomplete
+                                    size="small"
+                                    options={groupNameOptions}
+                                    variant="outlined"
+                                    value={newAppObj.app_permit_open}
+                                    onChange={(event, newValue) => {
+                                        handleEditAppValueNameInput(newValue, "app_permit_open");
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="Permit open"
+                                        />
+                                    )}
+                                />
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit todo" variant="outlined" select required value={newAppObj.app_permit_todolist} name="app_permit_todolist" onChange={(e) => handleNewAppInput(e)}>
-                                    {groupNameOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <Autocomplete
+                                    size="small"
+                                    options={groupNameOptions}
+                                    variant="outlined"
+                                    value={newAppObj.app_permit_todolist}
+                                    onChange={(event, newValue) => {
+                                        handleEditAppValueNameInput(newValue, "app_permit_todolist");
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="Permit todo"
+                                        />
+                                    )}
+                                />
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit doing" variant="outlined" select required value={newAppObj.app_permit_doing} name="app_permit_doing" onChange={(e) => handleNewAppInput(e)}>
-                                    {groupNameOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <Autocomplete
+                                    size="small"
+                                    options={groupNameOptions}
+                                    variant="outlined"
+                                    value={newAppObj.app_permit_doing}
+                                    onChange={(event, newValue) => {
+                                        handleEditAppValueNameInput(newValue, "app_permit_doing");
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="Permit doing"
+                                        />
+                                    )}
+                                />
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <TextField size="small" fullWidth label="Permit done" variant="outlined" select required value={newAppObj.app_permit_done} name="app_permit_done" onChange={(e) => handleNewAppInput(e)}>
-                                    {groupNameOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <Autocomplete
+                                    size="small"
+                                    options={groupNameOptions}
+                                    variant="outlined"
+                                    value={newAppObj.app_permit_done}
+                                    onChange={(event, newValue) => {
+                                        handleEditAppValueNameInput(newValue, "app_permit_done");
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="Permit done"
+                                        />
+                                    )}
+                                />
                             </Grid>
                         </Grid>
                     </Grid>
 
-                    <Grid item xs={12} justify="center">
-                        <Stack direction="row" justifyContent="center" spacing={5}>
-                            <Button variant="contained" onClick={props.handleClose}>
+                    <Grid
+                        item
+                        xs={12}
+                        justify="center"
+                    >
+                        <Stack
+                            direction="row"
+                            justifyContent="center"
+                            spacing={5}
+                        >
+                            <Button
+                                variant="contained"
+                                onClick={props.handleClose}
+                            >
                                 Back to Apps
                             </Button>
-                            <Button variant="contained" type="submit">
+                            <Button
+                                variant="contained"
+                                type="submit"
+                            >
                                 New App
                             </Button>
                         </Stack>
