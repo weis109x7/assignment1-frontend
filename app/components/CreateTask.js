@@ -66,7 +66,7 @@ export default function CreateTask({ handleClose, currentApp }) {
     async function handleSubmitnewTask(e) {
         e.preventDefault();
 
-        const response = await axiosPost("/task/new", { ...newTaskObj, task_plan: newTaskObj.task_plan.plan_mvp_name });
+        const response = await axiosPost("/task/new", { ...newTaskObj, task_plan: newTaskObj.task_plan?.plan_mvp_name ?? "" });
         if (response.success) {
             //sucess added new task
             appDispatch({ type: "flashMessage", success: true, message: "Task has been added!" });
@@ -206,8 +206,8 @@ export default function CreateTask({ handleClose, currentApp }) {
                                     label="Description"
                                     variant="outlined"
                                     multiline
-                                    minRows={3}
-                                    maxRows={3}
+                                    minRows={6}
+                                    maxRows={6}
                                     autoComplete="off"
                                 />
                             </Grid>
@@ -271,7 +271,7 @@ export default function CreateTask({ handleClose, currentApp }) {
                                     onChange={(e) => handleNewTaskInput(e)}
                                     placeholder="Enter Notes here"
                                     multiline
-                                    rows={7}
+                                    rows={10}
                                     autoComplete="off"
                                     fullWidth
                                     variant="outlined"

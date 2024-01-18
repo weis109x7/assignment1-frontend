@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useImmer } from "use-immer";
@@ -20,6 +20,8 @@ import UserTableToolbar from "./user/user-table-toolbar.jsx";
 import { emptyRows, applyFilter, getComparator } from "./user/utils";
 import CreateTask from "./CreateTask.js";
 import ViewPlans from "./ViewPlans.js";
+import TaskCard from "./TaskCard.js";
+import ViewTask from "./ViewTask.js";
 
 import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
@@ -30,7 +32,9 @@ const style = {
     position: "absolute",
     top: "50%",
     left: "50%",
+    overflowY: "scroll",
     transform: "translate(-50%, -50%)",
+    height: "80%",
     width: "70%",
     bgcolor: "background.paper",
     boxShadow: 24,
@@ -44,12 +48,43 @@ export default function Kanban() {
 
     const { appName } = useParams();
 
+    const [allTasks, setAllTasks] = useImmer([]);
+    const [seperatedTasks, setSeperatedTasks] = useImmer({
+        open: [],
+        todo: [],
+        doing: [],
+        done: [],
+        closed: [],
+    });
+
+    const taskSeperator = (acc, input) => {
+        acc[input.task_status].push(input);
+        return acc;
+    };
+
+    //run when alltasks is updated
+    useEffect(() => {
+        if (allTasks) {
+            setSeperatedTasks(
+                allTasks.reduce(taskSeperator, {
+                    open: [],
+                    todo: [],
+                    doing: [],
+                    done: [],
+                    closed: [],
+                })
+            );
+        }
+    }, [allTasks]);
+
+    const [newTaskPerm, setNewTaskPerm] = useImmer(false);
+
     const [openPlans, setOpenPlans] = useImmer(false);
     const [openAddTask, setOpenAddTask] = useImmer(false);
     const [openTask, setOpenTask] = useImmer(false);
 
     const handleClose = () => {
-        console.log("fetch app task");
+        fetchTasks();
         setOpenPlans(false);
         setOpenAddTask(false);
         setOpenTask(false);
@@ -59,13 +94,39 @@ export default function Kanban() {
         groupname: undefined,
     });
 
-    //run after usr has resumed session or is already logged in and ONLY if usr is admin
+    //run after usr has resumed session or is already logged in
     useEffect(() => {
         if (currentUserObj?.groupname) {
             //get current all task for this app
-            console.log("get app tasks");
+            fetchTasks();
         }
     }, [currentUserObj]);
+
+    //func to get taks for this app
+    async function fetchTasks() {
+        const response = await axiosPost("/task/gettasks", { task_app_acronym: appName });
+        if (response.success) {
+            setAllTasks(response.message);
+        } else {
+            switch (response.errorCode) {
+                //invalid jwt so force logout
+                case "ER_JWT_INVALID": {
+                    appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                    break;
+                }
+                case "ER_NOT_LOGIN": {
+                    appDispatch({ type: "logout" });
+                    appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                    break;
+                }
+                default: {
+                    console.log("uncaught error");
+                    appDispatch({ type: "flashMessage", success: false, message: response.message });
+                }
+            }
+        }
+    }
 
     // fetch latest user data
     useEffect(() => {
@@ -95,7 +156,12 @@ export default function Kanban() {
                 }
             }
         }
+        async function fetchAppPerms() {
+            const response = await axiosPost("/checkappperms", { appName: appName, perms_state: "create" });
+            setNewTaskPerm(response.success);
+        }
         fetchTokenValidity();
+        fetchAppPerms();
     }, []);
 
     return (
@@ -133,12 +199,11 @@ export default function Kanban() {
                 aria-describedby="modal-modal-description"
             >
                 <Box sx={style}>
-                    {/* <ViewApp
-                        viewingApp={viewingApp}
-                        setViewingApp={setViewingApp}
-                        handleClose={handleClose}
-                    ></ViewApp> */}
                     view task
+                    <ViewTask
+                        currentApp={appName}
+                        handleClose={handleClose}
+                    ></ViewTask>
                 </Box>
             </Modal>
             <Stack
@@ -156,13 +221,15 @@ export default function Kanban() {
                     >
                         Plans
                     </Button>
-                    <Button
-                        variant="contained"
-                        sx={{ ml: 1 }}
-                        onClick={() => setOpenAddTask(true)}
-                    >
-                        Add Task
-                    </Button>
+                    {newTaskPerm && (
+                        <Button
+                            variant="contained"
+                            sx={{ ml: 1 }}
+                            onClick={() => setOpenAddTask(true)}
+                        >
+                            Add Task
+                        </Button>
+                    )}
                 </Box>
             </Stack>
 
@@ -179,49 +246,99 @@ export default function Kanban() {
                 }
             >
                 <Stack
+                    width={"17%"}
                     direction="column"
                     justifyContent="flex-start"
                     alignItems="center"
                     spacing={2}
                 >
-                    <div>open task header</div>
-                    <div>task 1</div>
+                    <div>open task</div>
+                    {seperatedTasks.open.map((row) => (
+                        <TaskCard
+                            key={row.task_id}
+                            task_name={row.task_name}
+                            task_id={row.task_id}
+                            task_owner={row.task_owner}
+                            task_plan={row.task_plan}
+                            openModal={() => setOpenTask(true)}
+                        ></TaskCard>
+                    ))}
                 </Stack>
                 <Stack
+                    width={"17%"}
                     direction="column"
                     justifyContent="flex-start"
                     alignItems="center"
                     spacing={2}
                 >
-                    <div>todo task header</div>
-                    <div>task 1</div>
+                    <div>todo task</div>
+                    {seperatedTasks.todo.map((row) => (
+                        <TaskCard
+                            key={row.task_id}
+                            task_name={row.task_name}
+                            task_id={row.task_id}
+                            task_owner={row.task_owner}
+                            task_plan={row.task_plan}
+                            openModal={() => setOpenTask(true)}
+                        ></TaskCard>
+                    ))}
                 </Stack>
                 <Stack
+                    width={"17%"}
                     direction="column"
                     justifyContent="flex-start"
                     alignItems="center"
                     spacing={2}
                 >
-                    <div>doing task header</div>
-                    <div>task 1</div>
+                    <div>doing task</div>
+                    {seperatedTasks.doing.map((row) => (
+                        <TaskCard
+                            key={row.task_id}
+                            task_name={row.task_name}
+                            task_id={row.task_id}
+                            task_owner={row.task_owner}
+                            task_plan={row.task_plan}
+                            openModal={() => setOpenTask(true)}
+                        ></TaskCard>
+                    ))}
                 </Stack>
                 <Stack
+                    width={"17%"}
                     direction="column"
                     justifyContent="flex-start"
                     alignItems="center"
                     spacing={2}
                 >
-                    <div>done task header</div>
-                    <div>task 1</div>
+                    <div>done task</div>
+                    {seperatedTasks.done.map((row) => (
+                        <TaskCard
+                            key={row.task_id}
+                            task_name={row.task_name}
+                            task_id={row.task_id}
+                            task_owner={row.task_owner}
+                            task_plan={row.task_plan}
+                            openModal={() => setOpenTask(true)}
+                        ></TaskCard>
+                    ))}
                 </Stack>
                 <Stack
+                    width={"17%"}
                     direction="column"
                     justifyContent="flex-start"
                     alignItems="center"
                     spacing={2}
                 >
-                    <div>closed task header</div>
-                    <div>task 1</div>
+                    <div>closed task</div>
+                    {seperatedTasks.closed.map((row) => (
+                        <TaskCard
+                            key={row.task_id}
+                            task_name={row.task_name}
+                            task_id={row.task_id}
+                            task_owner={row.task_owner}
+                            task_plan={row.task_plan}
+                            openModal={() => setOpenTask(true)}
+                        ></TaskCard>
+                    ))}
                 </Stack>
             </Stack>
         </>

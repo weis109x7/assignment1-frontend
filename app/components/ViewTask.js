@@ -26,7 +26,7 @@ import dayjs from "dayjs";
 
 // ----------------------------------------------------------------------
 
-export default function ViewPlans({ currentApp, handleClose }) {
+export default function ViewTask({ currentApp, handleClose }) {
     const navigate = useNavigate();
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);

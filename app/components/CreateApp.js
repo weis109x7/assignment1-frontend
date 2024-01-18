@@ -51,7 +51,6 @@ export default function CreateApp(props) {
     });
 
     const handleNewAppInput = (e) => {
-        console.log(newAppObj);
         const { name, value } = e.target;
         setNewAppObj((prevFormData) => ({
             ...prevFormData,
@@ -71,7 +70,11 @@ export default function CreateApp(props) {
 
         //convert date to unix
         const submitAppObj = { ...newAppObj, app_startdate: dayjs(newAppObj.app_startdate).unix(), app_enddate: dayjs(newAppObj.app_enddate).unix() };
-
+        //check for valid dates
+        if (!(submitAppObj.app_startdate && submitAppObj.app_enddate)) {
+            appDispatch({ type: "flashMessage", success: false, message: "invalid dates" });
+            return;
+        }
         const response = await axiosPost("/app/new", { ...submitAppObj });
         if (response.success) {
             //sucess added new app
@@ -241,8 +244,10 @@ export default function CreateApp(props) {
                                     <DatePicker
                                         label="Start-date"
                                         name="app_startdate"
+                                        required
+                                        value={newAppObj.app_startdate}
                                         onChange={(e) => handleEditAppValueNameInput(e, "app_startdate")}
-                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_startdate } }}
+                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true } }}
                                     />
                                 </LocalizationProvider>
                             </Grid>
@@ -255,7 +260,8 @@ export default function CreateApp(props) {
                                         label="End-date"
                                         name="app_enddate"
                                         onChange={(e) => handleEditAppValueNameInput(e, "app_enddate")}
-                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true, value: newAppObj.app_enddate } }}
+                                        value={newAppObj.app_enddate}
+                                        slotProps={{ textField: { fullWidth: true, size: "small", required: true } }}
                                     />
                                 </LocalizationProvider>
                             </Grid>
