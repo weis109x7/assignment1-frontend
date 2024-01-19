@@ -7,7 +7,6 @@ import { Box, CardActionArea, Stack } from "@mui/material";
 import Chip from "@mui/material/Chip";
 
 export default function TaskCard({ task_name, task_id, task_owner, task_plan, openModal }) {
-    console.log(task_name);
     return (
         <Card sx={{ width: "100%" }}>
             <CardActionArea onClick={openModal}>

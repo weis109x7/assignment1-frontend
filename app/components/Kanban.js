@@ -8,7 +8,7 @@ import { axiosPost } from "../axiosPost.js";
 import DispatchContext from "../DispatchContext.js";
 import StateContext from "../StateContext.js";
 
-import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField } from "@mui/material";
+import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField, Typography } from "@mui/material";
 import { Check, Add } from "@mui/icons-material";
 import Modal from "@mui/material/Modal";
 
@@ -26,6 +26,8 @@ import ViewTask from "./ViewTask.js";
 import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
 import Divider from "@mui/material/Divider";
+
+import dayjs from "dayjs";
 
 // ----------------------------------------------------------------------
 const style = {
@@ -46,7 +48,16 @@ export default function Kanban() {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
+    const [viewingTask, setViewingTask] = useImmer(null);
+
     const { appName } = useParams();
+
+    const [allPlans, setAllPlans] = useImmer([]);
+    const [selectedPlan, setSelectedPlan] = useImmer(null);
+    //fetch task if selected plan is changed
+    useEffect(() => {
+        fetchTasks();
+    }, [selectedPlan]);
 
     const [allTasks, setAllTasks] = useImmer([]);
     const [seperatedTasks, setSeperatedTasks] = useImmer({
@@ -88,6 +99,7 @@ export default function Kanban() {
         setOpenPlans(false);
         setOpenAddTask(false);
         setOpenTask(false);
+        setViewingTask(null);
     };
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
@@ -106,7 +118,12 @@ export default function Kanban() {
     async function fetchTasks() {
         const response = await axiosPost("/task/gettasks", { task_app_acronym: appName });
         if (response.success) {
-            setAllTasks(response.message);
+            if (selectedPlan) {
+                let filteredTask = response.message.filter((task) => {
+                    return task.task_plan == selectedPlan.plan_mvp_name;
+                });
+                setAllTasks(filteredTask);
+            } else setAllTasks(response.message);
         } else {
             switch (response.errorCode) {
                 //invalid jwt so force logout
@@ -159,9 +176,62 @@ export default function Kanban() {
         async function fetchAppPerms() {
             const response = await axiosPost("/checkappperms", { appName: appName, perms_state: "create" });
             setNewTaskPerm(response.success);
+            if (!response.success) {
+                switch (response.errorCode) {
+                    case "ER_NOT_ALLOWED": {
+                        setNewTaskPerm(false);
+                        break;
+                    }
+                    //invalid jwt so force logout
+                    case "ER_JWT_INVALID": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                        break;
+                    }
+                    case "ER_NOT_LOGIN": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                        break;
+                    }
+                    case "ER_FIELD_INVALID": {
+                        navigate("/app");
+                        appDispatch({ type: "flashMessage", success: false, message: "Invalid App name?!" });
+                        break;
+                    }
+                    default: {
+                        console.log("uncaught error");
+                        appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    }
+                }
+            }
+        }
+        async function fetchPlans() {
+            const response = await axiosPost("/plan/getplans", { app_acronym: appName });
+            if (response.success) {
+                setAllPlans(response.message);
+            } else {
+                switch (response.errorCode) {
+                    //invalid jwt so force logout
+                    case "ER_JWT_INVALID": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                        break;
+                    }
+                    case "ER_NOT_LOGIN": {
+                        appDispatch({ type: "logout" });
+                        appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                        break;
+                    }
+                    default: {
+                        console.log("uncaught error");
+                        appDispatch({ type: "flashMessage", success: false, message: response.message });
+                    }
+                }
+            }
         }
         fetchTokenValidity();
         fetchAppPerms();
+        fetchPlans();
     }, []);
 
     return (
@@ -199,9 +269,9 @@ export default function Kanban() {
                 aria-describedby="modal-modal-description"
             >
                 <Box sx={style}>
-                    view task
                     <ViewTask
                         currentApp={appName}
+                        currentTaskId={viewingTask}
                         handleClose={handleClose}
                     ></ViewTask>
                 </Box>
@@ -214,6 +284,38 @@ export default function Kanban() {
                 spacing={1}
             >
                 <h1>{appName}</h1>
+                <Autocomplete
+                    size="small"
+                    options={allPlans}
+                    getOptionLabel={(option) => option.plan_mvp_name}
+                    renderOption={(props, option) => (
+                        <Box
+                            sx={{ mr: 2 }}
+                            {...props}
+                        >
+                            <Stack
+                                direction="column"
+                                justifyContent="center"
+                            >
+                                <Typography variant="body2">{option.plan_mvp_name}</Typography>
+                                <Typography variant="caption">
+                                    {dayjs.unix(option.plan_startdate).format("ll")} - {dayjs.unix(option.plan_enddate).format("ll")}
+                                </Typography>
+                            </Stack>
+                        </Box>
+                    )}
+                    variant="outlined"
+                    value={selectedPlan}
+                    onChange={(event, newValue) => {
+                        setSelectedPlan(newValue);
+                    }}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Task Plan"
+                        />
+                    )}
+                />
                 <Box>
                     <Button
                         variant="contained"
@@ -260,7 +362,10 @@ export default function Kanban() {
                             task_id={row.task_id}
                             task_owner={row.task_owner}
                             task_plan={row.task_plan}
-                            openModal={() => setOpenTask(true)}
+                            openModal={() => {
+                                setViewingTask(row.task_id);
+                                setOpenTask(true);
+                            }}
                         ></TaskCard>
                     ))}
                 </Stack>
@@ -279,7 +384,10 @@ export default function Kanban() {
                             task_id={row.task_id}
                             task_owner={row.task_owner}
                             task_plan={row.task_plan}
-                            openModal={() => setOpenTask(true)}
+                            openModal={() => {
+                                setViewingTask(row.task_id);
+                                setOpenTask(true);
+                            }}
                         ></TaskCard>
                     ))}
                 </Stack>
@@ -298,7 +406,10 @@ export default function Kanban() {
                             task_id={row.task_id}
                             task_owner={row.task_owner}
                             task_plan={row.task_plan}
-                            openModal={() => setOpenTask(true)}
+                            openModal={() => {
+                                setViewingTask(row.task_id);
+                                setOpenTask(true);
+                            }}
                         ></TaskCard>
                     ))}
                 </Stack>
@@ -317,7 +428,10 @@ export default function Kanban() {
                             task_id={row.task_id}
                             task_owner={row.task_owner}
                             task_plan={row.task_plan}
-                            openModal={() => setOpenTask(true)}
+                            openModal={() => {
+                                setViewingTask(row.task_id);
+                                setOpenTask(true);
+                            }}
                         ></TaskCard>
                     ))}
                 </Stack>
@@ -336,7 +450,10 @@ export default function Kanban() {
                             task_id={row.task_id}
                             task_owner={row.task_owner}
                             task_plan={row.task_plan}
-                            openModal={() => setOpenTask(true)}
+                            openModal={() => {
+                                setViewingTask(row.task_id);
+                                setOpenTask(true);
+                            }}
                         ></TaskCard>
                     ))}
                 </Stack>

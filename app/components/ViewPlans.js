@@ -151,12 +151,12 @@ export default function ViewPlans({ currentApp, handleClose }) {
                 //invalid jwt so force logout
                 case "ER_JWT_INVALID": {
                     appDispatch({ type: "logout" });
-                    appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
+                    // appDispatch({ type: "flashMessage", success: false, message: "Invalid JWT token, please login again!" });
                     break;
                 }
                 case "ER_NOT_LOGIN": {
                     appDispatch({ type: "logout" });
-                    appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
+                    // appDispatch({ type: "flashMessage", success: false, message: "Please Login to access!" });
                     break;
                 }
                 default: {

@@ -41,13 +41,13 @@ export default function CreateApp(props) {
         app_acronym: "",
         app_description: "",
         app_rnumber: "0",
-        app_startdate: undefined,
-        app_enddate: undefined,
-        app_permit_create: "",
-        app_permit_open: "",
-        app_permit_todolist: "",
-        app_permit_doing: "",
-        app_permit_done: "",
+        app_startdate: null,
+        app_enddate: null,
+        app_permit_create: null,
+        app_permit_open: null,
+        app_permit_todolist: null,
+        app_permit_doing: null,
+        app_permit_done: null,
     });
 
     const handleNewAppInput = (e) => {
