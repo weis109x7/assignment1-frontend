@@ -27,7 +27,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 
 import dayjs from "dayjs";
 
-export default function ViewApp(props) {
+export default function ViewApp({ viewingApp, handleClose, setViewingApp }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -43,7 +43,7 @@ export default function ViewApp(props) {
     const handleEdit = (event) => {
         if (editable) {
             //cancel edit so reset fields
-            setNewAppObj(props.viewingApp);
+            setNewAppObj(viewingApp);
         }
         setEditable((editable) => !editable);
     };
@@ -87,7 +87,7 @@ export default function ViewApp(props) {
         if (response.success) {
             //sucess added new app
             appDispatch({ type: "flashMessage", success: true, message: "App has been edited!" });
-            props.handleClose();
+            handleClose();
         } else {
             switch (response.errorCode) {
                 //invalid field so flash message showing error
@@ -146,11 +146,11 @@ export default function ViewApp(props) {
     useEffect(() => {
         //func to get current app
         async function fetchCurrentApp() {
-            const response = await axiosPost("/app/getapps", { app_acronym: props.viewingApp });
+            const response = await axiosPost("/app/getapps", { app_acronym: viewingApp });
 
             if (response.success) {
                 //success get apps
-                props.setViewingApp({ ...response.message[0], app_startdate: dayjs.unix(response.message[0].app_startdate), app_enddate: dayjs.unix(response.message[0].app_enddate) });
+                setViewingApp({ ...response.message[0], app_startdate: dayjs.unix(response.message[0].app_startdate), app_enddate: dayjs.unix(response.message[0].app_enddate) });
                 setNewAppObj({ ...response.message[0], app_startdate: dayjs.unix(response.message[0].app_startdate), app_enddate: dayjs.unix(response.message[0].app_enddate) });
             } else {
                 switch (response.errorCode) {
@@ -227,7 +227,7 @@ export default function ViewApp(props) {
                             spacing={1}
                             justifyContent="space-evenly"
                         >
-                            <h2>Viewing {props.viewingApp.app_acronym}</h2>
+                            <h2>Viewing {viewingApp.app_acronym}</h2>
                             <Grid
                                 item
                                 xs={12}
@@ -324,7 +324,7 @@ export default function ViewApp(props) {
                             spacing={1}
                             justifyContent="space-evenly"
                         >
-                            <h2>{props.viewingApp.app_acronym} permissions</h2>
+                            <h2>{viewingApp.app_acronym} permissions</h2>
                             <Grid
                                 item
                                 xs={12}
@@ -454,7 +454,7 @@ export default function ViewApp(props) {
                         >
                             <Button
                                 variant="contained"
-                                onClick={props.handleClose}
+                                onClick={handleClose}
                             >
                                 Back to Apps
                             </Button>

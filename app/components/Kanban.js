@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import { useImmer } from "use-immer";
 
@@ -45,6 +45,7 @@ const style = {
 
 export default function Kanban() {
     const navigate = useNavigate();
+
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -284,38 +285,40 @@ export default function Kanban() {
                 spacing={1}
             >
                 <h1>{appName}</h1>
-                <Autocomplete
-                    size="small"
-                    options={allPlans}
-                    getOptionLabel={(option) => option.plan_mvp_name}
-                    renderOption={(props, option) => (
-                        <Box
-                            sx={{ mr: 2 }}
-                            {...props}
-                        >
-                            <Stack
-                                direction="column"
-                                justifyContent="center"
+                <Box sx={{ width: "25%" }}>
+                    <Autocomplete
+                        size="small"
+                        options={allPlans}
+                        getOptionLabel={(option) => option.plan_mvp_name}
+                        renderOption={(props, option) => (
+                            <Box
+                                sx={{ mr: 2 }}
+                                {...props}
                             >
-                                <Typography variant="body2">{option.plan_mvp_name}</Typography>
-                                <Typography variant="caption">
-                                    {dayjs.unix(option.plan_startdate).format("ll")} - {dayjs.unix(option.plan_enddate).format("ll")}
-                                </Typography>
-                            </Stack>
-                        </Box>
-                    )}
-                    variant="outlined"
-                    value={selectedPlan}
-                    onChange={(event, newValue) => {
-                        setSelectedPlan(newValue);
-                    }}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            label="Task Plan"
-                        />
-                    )}
-                />
+                                <Stack
+                                    direction="column"
+                                    justifyContent="center"
+                                >
+                                    <Typography variant="body2">{option.plan_mvp_name}</Typography>
+                                    <Typography variant="caption">
+                                        {dayjs.unix(option.plan_startdate).format("ll")} - {dayjs.unix(option.plan_enddate).format("ll")}
+                                    </Typography>
+                                </Stack>
+                            </Box>
+                        )}
+                        variant="outlined"
+                        value={selectedPlan}
+                        onChange={(event, newValue) => {
+                            setSelectedPlan(newValue);
+                        }}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Task Plan"
+                            />
+                        )}
+                    />
+                </Box>
                 <Box>
                     <Button
                         variant="contained"

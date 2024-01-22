@@ -27,7 +27,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 
 import dayjs from "dayjs";
 
-export default function CreateApp(props) {
+export default function CreateApp({ handleClose }) {
     const appDispatch = useContext(DispatchContext);
     const appState = useContext(StateContext);
 
@@ -79,7 +79,7 @@ export default function CreateApp(props) {
         if (response.success) {
             //sucess added new app
             appDispatch({ type: "flashMessage", success: true, message: "App has been added!" });
-            props.handleClose();
+            handleClose();
         } else {
             switch (response.errorCode) {
                 //invalid field so flash message showing error
@@ -402,7 +402,7 @@ export default function CreateApp(props) {
                         >
                             <Button
                                 variant="contained"
-                                onClick={props.handleClose}
+                                onClick={handleClose}
                             >
                                 Back to Apps
                             </Button>
