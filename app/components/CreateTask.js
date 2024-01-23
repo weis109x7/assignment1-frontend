@@ -6,24 +6,9 @@ import StateContext from "../StateContext.js";
 import { useImmer } from "use-immer";
 import { axiosPost } from "../axiosPost.js";
 
-import { MenuItem, Card, Stack, Table, Button, Container, TableBody, TableContainer, TablePagination, Autocomplete, TextField, Typography } from "@mui/material";
+import { Stack, Button, Autocomplete, TextField, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
-import { Check, Add } from "@mui/icons-material";
-
-import TableNoData from "./user/table-no-data.jsx";
-import AppTableRow from "./user/app-table-row.jsx";
-import UserTableHead from "./user/user-table-head.jsx";
-import TableEmptyRows from "./user/table-empty-rows.jsx";
-import UserTableToolbar from "./user/user-table-toolbar.jsx";
-
-import { emptyRows, applyFilter, getComparator } from "./user/utils.js";
-import { styled } from "@mui/material/styles";
-
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers";
 
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";

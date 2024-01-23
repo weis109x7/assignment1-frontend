@@ -39,7 +39,6 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
 
     const [editTaskPerm, setEditTaskPerm] = useImmer(false);
     const [promotable, setPromotable] = useImmer(false);
-    const [saveable, setSaveable] = useImmer(true);
     const [demotable, setDemotable] = useImmer(false);
     const [planEditable, setPlanEditable] = useImmer(false);
 
@@ -51,6 +50,19 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
         fetchTaskByID();
         fetchPlans();
     };
+
+    const [currentTaskObj, setCurrentTaskObj] = useImmer({
+        task_name: "",
+        task_id: "",
+        task_description: "",
+        task_status: "",
+        task_creator: "",
+        task_owner: "",
+        task_createdate: "",
+        task_notes: "",
+        task_plan: null,
+        task_app_acronym: "",
+    });
 
     const [newTaskObj, setNewTaskObj] = useImmer({
         task_name: "",
@@ -82,19 +94,6 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
 
     const [currentUserObj, setCurrentUserObj] = useImmer({
         groupname: undefined,
-    });
-
-    const [currentTaskObj, setCurrentTaskObj] = useImmer({
-        task_name: "",
-        task_id: "",
-        task_description: "",
-        task_status: "",
-        task_creator: "",
-        task_owner: "",
-        task_createdate: "",
-        task_notes: "",
-        task_plan: null,
-        task_app_acronym: "",
     });
 
     async function handleSubmit(e) {
@@ -161,10 +160,8 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
         if (currentTaskObj.task_status == "done") {
             if (compare1 != compare2) {
                 setPromotable(false);
-                setSaveable(false);
             } else {
                 setPromotable(true);
-                setSaveable(true);
             }
         }
     }, [newTaskObj]);
@@ -465,7 +462,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
                                             variant="contained"
                                             onClick={handleSubmit}
                                             name="edit"
-                                            disabled={!saveable}
+                                            disabled={!promotable}
                                         >
                                             Save
                                         </Button>
