@@ -220,7 +220,7 @@ export default function ViewApp({ viewingApp, handleClose, setViewingApp }) {
                 >
                     <Grid
                         item
-                        xs={6}
+                        xs={8}
                     >
                         <Grid
                             container
@@ -260,7 +260,7 @@ export default function ViewApp({ viewingApp, handleClose, setViewingApp }) {
                                     variant="outlined"
                                     multiline
                                     minRows={3}
-                                    maxRows={3}
+                                    maxRows={6}
                                     autoComplete="off"
                                 />
                             </Grid>
@@ -317,7 +317,7 @@ export default function ViewApp({ viewingApp, handleClose, setViewingApp }) {
 
                     <Grid
                         item
-                        xs={6}
+                        xs={4}
                     >
                         <Grid
                             container

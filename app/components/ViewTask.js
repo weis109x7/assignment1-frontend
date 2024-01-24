@@ -269,7 +269,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
                 >
                     <Grid
                         item
-                        xs={6}
+                        xs={3}
                     >
                         <Grid
                             container
@@ -374,7 +374,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
 
                     <Grid
                         item
-                        xs={6}
+                        xs={9}
                     >
                         <Grid
                             container

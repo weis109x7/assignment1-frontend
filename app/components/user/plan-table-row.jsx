@@ -128,10 +128,10 @@ export default function PlanTableRow({ plan_mvp_name, plan_startdate, plan_endda
                 <TableCell>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
-                            label="Start-date"
+                            label="End-date"
                             name="plan_enddate"
                             disabled={!editable}
-                            value={startDate}
+                            value={endDate}
                             onChange={(value) => setEndDate(value)}
                             slotProps={{ textField: { fullWidth: true, size: "small", required: true } }}
                         />
