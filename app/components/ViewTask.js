@@ -28,6 +28,12 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
 
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 import dayjs from "dayjs";
 
 // ----------------------------------------------------------------------
@@ -46,9 +52,17 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
 
     const [editable, setEditable] = useImmer(false);
     const toggleEdit = (event) => {
-        setEditable((editable) => !editable);
+        // setEditable((editable) => !editable);
         fetchTaskByID();
         fetchPlans();
+    };
+
+    const [open, setOpen] = React.useState(false);
+    const handleConfirmOpen = () => {
+        setOpen(true);
+    };
+    const handleConfimClose = () => {
+        setOpen(false);
     };
 
     const [currentTaskObj, setCurrentTaskObj] = useImmer({
@@ -100,6 +114,8 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
         let action = e.target.name;
         e.preventDefault();
 
+        if (!confirm("yes?")) return;
+
         const response = await axiosPost("/task/edit", {
             task_id: newTaskObj.task_id,
             task_description: newTaskObj.task_description,
@@ -112,7 +128,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
         if (response.success) {
             //success new plan
             appDispatch({ type: "flashMessage", success: true, message: "sucessfully edited task" });
-            setEditable(false);
+            // setEditable(false);
             fetchTaskByID();
             fetchPlans();
         } else {
@@ -196,8 +212,10 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
         async function fetchAppPerms() {
             const response = await axiosPost("/checkappperms", { appName: currentApp, perms_state: currentTaskObj.task_status });
             setEditTaskPerm(response.success);
+            if (response.success) setEditable(true);
         }
         if (currentTaskObj.task_status) fetchAppPerms();
+        console.log(currentTaskObj);
     }, [currentTaskObj]);
 
     async function fetchTaskByID() {
@@ -359,6 +377,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
                                     variant="outlined"
                                     value={newTaskObj.task_plan}
                                     onChange={(event, newValue) => {
+                                        event.preventDefault();
                                         handleNewTaskValueNameInput(newValue, "task_plan");
                                     }}
                                     renderInput={(params) => (
@@ -444,17 +463,18 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
                             {editTaskPerm &&
                                 (editable ? (
                                     <>
-                                        <Button
+                                        {/* <Button
                                             variant="contained"
                                             onClick={toggleEdit}
                                         >
                                             Cancel
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             variant="contained"
                                             onClick={handleSubmit}
                                             name="demote"
                                             disabled={!demotable}
+                                            color="error"
                                         >
                                             Demote and save
                                         </Button>
@@ -471,6 +491,7 @@ export default function ViewTask({ currentTaskId, handleClose, currentApp }) {
                                             onClick={handleSubmit}
                                             name="promote"
                                             disabled={!promotable}
+                                            color="success"
                                         >
                                             Promote and Save
                                         </Button>
